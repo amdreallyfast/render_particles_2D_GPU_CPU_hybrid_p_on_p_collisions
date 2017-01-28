@@ -1,6 +1,9 @@
 #include "QuadTreeNodeSsbo.h"
+#include "ParticleQuadTreeNode.h"
 
 #include "glload/include/glload/gl_4_4.h"
+
+
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -12,19 +15,21 @@ faceCollection  Self-explanatory
 Returns:    None
 Creator: John Cox, 1-16-2017
 -----------------------------------------------------------------------------------------------*/
-QuadTreeNodeSsbo::QuadTreeNodeSsbo(const std::vector<ParticleQuadTreeNode> &nodeCollection) :
+QuadTreeNodeSsbo::QuadTreeNodeSsbo(const ParticleQuadTreeNode *nodeCollection, int numNodes) :
     SsboBase()  // generate buffers
 {
     // ignore _numVertices because this SSBO does not draw
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, _bufferId);
-    GLuint bufferSizeBytes = sizeof(ParticleQuadTreeNode) * nodeCollection.size();
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSizeBytes, nodeCollection.data(), GL_STATIC_DRAW);
+    GLuint bufferSizeBytes = sizeof(ParticleQuadTreeNode) * numNodes;
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSizeBytes, nodeCollection, GL_STATIC_DRAW);
 
     // cleanup
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 }
+
+
 
 /*-----------------------------------------------------------------------------------------------
 Description:

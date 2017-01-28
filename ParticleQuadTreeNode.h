@@ -22,14 +22,14 @@ struct ParticleQuadTreeNode
         _topEdge(0.0f),
         _rightEdge(0.0f),
         _bottomEdge(0.0f),
-        _neighborIndexLeft(0),
-        _neighborIndexTopLeft(0),
-        _neighborIndexTop(0),
-        _neighborIndexTopRight(0),
-        _neighborIndexRight(0),
-        _neighborIndexBottomRight(0),
-        _neighborIndexBottom(0),
-        _neighborIndexBottomLeft(0)
+        _neighborIndexLeft(-1),
+        _neighborIndexTopLeft(-1),
+        _neighborIndexTop(-1),
+        _neighborIndexTopRight(-1),
+        _neighborIndexRight(-1),
+        _neighborIndexBottomRight(-1),
+        _neighborIndexBottom(-1),
+        _neighborIndexBottomLeft(-1)
     {
         memset(_indicesForContainedParticles, 0, sizeof(int) * MAX_PARTICLES_PER_QUAD_TREE_NODE);
     }

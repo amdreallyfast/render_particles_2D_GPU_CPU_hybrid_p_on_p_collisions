@@ -4,6 +4,8 @@
 #include "ParticleQuadTreeNode.h"
 #include "glm/vec4.hpp"
 
+class Particle;
+
 /*-----------------------------------------------------------------------------------------------
 Description:
     Starts up the quad tree that will contain the particles.  The constructor initializes the 
@@ -22,21 +24,35 @@ class ParticleQuadTree
 public:
     ParticleQuadTree(const glm::vec4 &particleRegionCenter, float particleRegionRadius);
 
-    // increase the number of additional nodes as necessary to handle more subdivision
-    // Note: This algorithm was built with the compute shader's implementation in mind.  These 
-    // structures are meant to be used as if a compute shader was running it, hence all the 
-    // arrays and a complete lack of runtime memory reallocation.
-    //static const int _NUM_ROWS_IN_TREE_INITIAL = 8;
-    //static const int _NUM_COLUMNS_IN_TREE_INITIAL = 8;
-    //static const int _NUM_STARTING_NODES = _NUM_ROWS_IN_TREE_INITIAL * _NUM_COLUMNS_IN_TREE_INITIAL;
-    static const int _NUM_ROWS_IN_TREE_INITIAL = 64;
-    static const int _NUM_COLUMNS_IN_TREE_INITIAL = 64;
-    static const int _NUM_STARTING_NODES = _NUM_ROWS_IN_TREE_INITIAL * _NUM_COLUMNS_IN_TREE_INITIAL;
+    void ResetTree();
+    void AddParticlestoTree(Particle *particleCollection, int numParticles);
+    const ParticleQuadTreeNode *CurrentBuffer() const;
 
-    // if you change this, MUST also change the array size of atomic counters in quadTreePopulate.comp
-    static const int _MAX_NODES = _NUM_STARTING_NODES * 8;
+    unsigned int NumActiveNodes() const;
+    unsigned int SizeOfAllNodesBytes() const;
+    int NumNodePopulations() const;
 
-    std::vector<ParticleQuadTreeNode> _allQuadTreeNodes;
+public:
+    static const int _MAX_NODES = 256 * 256;
+
+private:
+    bool AddParticleToNode(int particleIndex, int nodeIndex, Particle *particleCollection);
+    bool SubdivideNode(int nodeIndex, Particle *particleCollection);
+
+    enum FIRST_FOUR_NODE_INDEXES
+    {
+        TOP_LEFT = 0,
+        TOP_RIGHT,
+        BOTTOM_LEFT,
+        BOTTOM_RIGHT,
+        NUM_STARTING_NODES
+    };
+
+    int _completedNodePopulations;
+
+
+    int _numActiveNodes;
+    ParticleQuadTreeNode _allNodes[_MAX_NODES];
     glm::vec4 _particleRegionCenter;
     float _particleRegionRadius;
 

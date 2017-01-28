@@ -1,8 +1,10 @@
 #pragma once
 
 #include "SsboBase.h"
-#include "ParticleQuadTreeNode.h"
-#include <vector>
+//#include "ParticleQuadTreeNode.h"
+//#include <vector>
+
+struct ParticleQuadTreeNode;
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -13,7 +15,8 @@ Creator: John Cox, 1/16/2017
 class QuadTreeNodeSsbo : public SsboBase
 {
 public:
-    QuadTreeNodeSsbo(const std::vector<ParticleQuadTreeNode> &nodeCollection);
+    //QuadTreeNodeSsbo(const std::vector<ParticleQuadTreeNode> &nodeCollection);
+    QuadTreeNodeSsbo(const ParticleQuadTreeNode *nodeCollection, int numNodes);
     virtual ~QuadTreeNodeSsbo();
 
     void ConfigureCompute(unsigned int computeProgramId, const std::string &bufferNameInShader) override;
