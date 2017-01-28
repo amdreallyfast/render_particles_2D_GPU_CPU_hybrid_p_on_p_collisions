@@ -89,7 +89,7 @@ ComputeControllerGenerateQuadTreeGeometry *gpQuadTreeGeometryGenerator = 0;
 ComputeControllerPopulateQuadTree *gpQuadTreePopulater = 0;
 ComputeControllerParticleCollisions *gpQuadTreeParticleCollider = 0;
 
-const unsigned int MAX_PARTICLE_COUNT = 100000;
+
 
 
 /*-----------------------------------------------------------------------------------------------
@@ -270,7 +270,7 @@ void Init()
     gpParticleBoundingRegionBuffer->ConfigureRender(renderGeometryProgramId, GL_LINES);
 
     // set up the particle SSBO for computing and rendering
-    std::vector<Particle> allParticles(MAX_PARTICLE_COUNT);
+    std::vector<Particle> allParticles(Particle::_MAX_PARTICLES);
     gpParticleBuffer = new ParticleSsbo(allParticles);
     gpParticleBuffer->ConfigureCompute(shaderStorageRef.GetShaderProgram(computeShaderResetKey), "ParticleBuffer");
     gpParticleBuffer->ConfigureCompute(shaderStorageRef.GetShaderProgram(computeShaderUpdateKey), "ParticleBuffer");
@@ -316,19 +316,19 @@ void Init()
     gpParticleEmitterBar2->SetTransform(windowSpaceTransform);
 
     // start up the encapsulation of the CPU side of the computer shader
-    gpParticleReseter = new ComputeControllerParticleReset(MAX_PARTICLE_COUNT, computeShaderResetKey);
+    gpParticleReseter = new ComputeControllerParticleReset(Particle::_MAX_PARTICLES, computeShaderResetKey);
     gpParticleReseter->AddEmitter(gpParticleEmitterBar1);
     gpParticleReseter->AddEmitter(gpParticleEmitterBar2);
 
-    gpParticleUpdater = new ComputeControllerParticleUpdate(MAX_PARTICLE_COUNT, particleRegionCenter, particleRegionRadius, computeShaderUpdateKey);
+    gpParticleUpdater = new ComputeControllerParticleUpdate(Particle::_MAX_PARTICLES, particleRegionCenter, particleRegionRadius, computeShaderUpdateKey);
 
     //gpQuadTreeReseter = new ComputeControllerResetQuadTree(ParticleQuadTree::_NUM_STARTING_NODES, ParticleQuadTree::_MAX_NODES, computeShaderQuadTreeResetKey);
 
     gpQuadTreeGeometryGenerator = new ComputeControllerGenerateQuadTreeGeometry(ParticleQuadTree::_MAX_NODES, allPolygonFaces, ComputeControllerGenerateQuadTreeGeometryKey);
 
-    //gpQuadTreePopulater = new ComputeControllerPopulateQuadTree(ParticleQuadTree::_MAX_NODES, MAX_PARTICLE_COUNT, particleRegionRadius, particleRegionCenter, ParticleQuadTree::_NUM_COLUMNS_IN_TREE_INITIAL, ParticleQuadTree::_NUM_ROWS_IN_TREE_INITIAL, ParticleQuadTree::_NUM_STARTING_NODES, ComputeControllerPopulateQuadTreeKey);
+    //gpQuadTreePopulater = new ComputeControllerPopulateQuadTree(ParticleQuadTree::_MAX_NODES, _MAX_PARTICLES, particleRegionRadius, particleRegionCenter, ParticleQuadTree::_NUM_COLUMNS_IN_TREE_INITIAL, ParticleQuadTree::_NUM_ROWS_IN_TREE_INITIAL, ParticleQuadTree::_NUM_STARTING_NODES, ComputeControllerPopulateQuadTreeKey);
 
-    //gpQuadTreeParticleCollider = new ComputeControllerParticleCollisions(MAX_PARTICLE_COUNT, computeQuadTreeParticleColliderKey);
+    //gpQuadTreeParticleCollider = new ComputeControllerParticleCollisions(_MAX_PARTICLES, computeQuadTreeParticleColliderKey);
 
     // the timer will be used for framerate calculations
     gTimer.Init();
@@ -363,50 +363,52 @@ void UpdateAllTheThings()
 
     
 
-    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, gpQuadTreeBuffer->BufferId());
-    //GLuint bufferSizeBytes = sizeof(ParticleQuadTreeNode) * gpQuadTree->NumActiveNodes();
-    //glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, bufferSizeBytes, gpQuadTree->CurrentBuffer());
-    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-
-
-    ////GLuint bufferSizeBytes = sizeof(Particle) * MAX_PARTICLE_COUNT;
+    GLuint bufferSizeBytes = sizeof(Particle) * Particle::_MAX_PARTICLES;
     //GLuint bufferSizeBytes = sizeof(ParticleQuadTreeNode) * ParticleQuadTree::_MAX_NODES;
-    //GLuint copyBufferId;
-    //glGenBuffers(1, &copyBufferId);
-    //glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferId);
-    //glBufferData(GL_COPY_WRITE_BUFFER, bufferSizeBytes, 0, GL_DYNAMIC_COPY);
-    ////glBindBuffer(GL_COPY_READ_BUFFER, gpParticleBuffer->BufferId());
+    GLuint copyBufferId;
+    glGenBuffers(1, &copyBufferId);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferId);
+    glBufferData(GL_COPY_WRITE_BUFFER, bufferSizeBytes, 0, GL_DYNAMIC_COPY);
+    glBindBuffer(GL_COPY_READ_BUFFER, gpParticleBuffer->BufferId());
     //glBindBuffer(GL_COPY_READ_BUFFER, gpQuadTreeBuffer->BufferId());
-    //glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, bufferSizeBytes);
-    //void *bufferPtr = glMapBuffer(GL_COPY_WRITE_BUFFER, GL_READ_ONLY);
-    ////Particle *objPtr = static_cast<Particle *>(bufferPtr);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, bufferSizeBytes);
+    void *bufferPtr = glMapBuffer(GL_COPY_WRITE_BUFFER, GL_READ_ONLY);
+    Particle *objPtr = static_cast<Particle *>(bufferPtr);
     //ParticleQuadTreeNode *objPtr = static_cast<ParticleQuadTreeNode *>(bufferPtr);
-    //
-    ////for (size_t i = 0; i < MAX_PARTICLE_COUNT; i++)
-    ////{
-    ////    Particle &p = objPtr[i];
-    ////    if (p._indexOfNodeThatItIsOccupying >= MAX_PARTICLE_COUNT)
-    ////    {
-    ////        printf("");
-    ////    }
-    ////}
+    
+    //for (size_t i = 0; i < _MAX_PARTICLES; i++)
+    //{
+    //    Particle &p = objPtr[i];
+    //    if (p._indexOfNodeThatItIsOccupying >= _MAX_PARTICLES)
+    //    {
+    //        printf("");
+    //    }
+    //}
     //for (size_t i = 0; i < ParticleQuadTree::_MAX_NODES; i++)
     //{
     //    ParticleQuadTreeNode &node = objPtr[i];
     //    if (node._numCurrentParticles == -1 ||
-    //        node._numCurrentParticles > ParticleQuadTreeNode::MAX_PARTICLES_PER_QUAD_TREE_NODE)
+    //        node._numCurrentParticles > ParticleQuadTreeNode::_MAX_PARTICLES_PER_QUAD_TREE_NODE)
     //    {
     //        printf("");
     //    }
     //}
 
-    //glUnmapBuffer(GL_COPY_WRITE_BUFFER);
-    //glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
-    //glBindBuffer(GL_COPY_READ_BUFFER, 0);
-    //glDeleteBuffers(1, &copyBufferId);
+    glUnmapBuffer(GL_COPY_WRITE_BUFFER);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+    glBindBuffer(GL_COPY_READ_BUFFER, 0);
+    glDeleteBuffers(1, &copyBufferId);
 
     
+    gpQuadTree->AddParticlestoTree(objPtr, Particle::_MAX_PARTICLES);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gpQuadTreeBuffer->BufferId());
+    bufferSizeBytes = sizeof(ParticleQuadTreeNode) * gpQuadTree->NumActiveNodes();
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, bufferSizeBytes, gpQuadTree->CurrentBuffer());
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+
+
 
     // TODO: performance experiment: when doing the particle collisions, try making many more threads (divide particle population by a <256)
 
@@ -476,7 +478,7 @@ void Display()
     static int elapsedFramesPerSecond = 0;
     static double elapsedTime = 0.0;
     static double frameRate = 0.0;
-    static double quadTreePopulationsPerSecond = 0.0;
+    static int quadTreePopulationsPerSecond = 0;
     elapsedFramesPerSecond++;
     elapsedTime += gTimer.Lap();
     if (elapsedTime > 1.0)
@@ -484,7 +486,7 @@ void Display()
         frameRate = (double)elapsedFramesPerSecond / elapsedTime;
         elapsedFramesPerSecond = 0;
 
-        quadTreePopulationsPerSecond = (double)(gpQuadTree->NumNodePopulations()) / elapsedTime;
+        quadTreePopulationsPerSecond = (int)((gpQuadTree->NumNodePopulations()) / elapsedTime);
         gpQuadTree->ResetNumNodePopulations();
 
         elapsedTime -= 1.0f;

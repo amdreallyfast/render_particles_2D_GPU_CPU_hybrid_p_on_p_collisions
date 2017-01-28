@@ -31,7 +31,11 @@ struct Particle
     {
     }
 
-    // TODO: dd "previous position" too (for collision detection)
+    // TODO: add "previous position" too (for collision detection with solids)
+
+
+    static const unsigned int _MAX_PARTICLES = 100000;
+
 
     // even though this is a 2D program, I wasn't able to figure out the byte misalignments 
     // between C++ and GLSL (every variable is aligned on a 16byte boundry, but adding 2-float 

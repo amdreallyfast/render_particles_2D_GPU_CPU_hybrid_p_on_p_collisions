@@ -2,9 +2,9 @@
 
 #include <vector>
 #include "ParticleQuadTreeNode.h"
+#include "Particle.h"
 #include "glm/vec4.hpp"
 
-class Particle;
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -57,4 +57,5 @@ private:
     glm::vec4 _particleRegionCenter;
     float _particleRegionRadius;
 
+    Particle _localParticleArray[Particle::_MAX_PARTICLES];
 };

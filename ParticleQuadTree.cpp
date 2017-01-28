@@ -221,6 +221,7 @@ void ParticleQuadTree::ResetTree()
         }
     }
 
+    printf("");
     // TODO: try a memset to 0 from _allNodes[FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES] to _allNodes[_MAX_NODES - 1]
 
     //// top left
@@ -242,16 +243,21 @@ Description:
     Governs the addition of particles to the quad tree.  AddParticleToNode(...) will 
     handle subdivision and addition of particles to child nodes.
 Parameters: 
-    particleCollection  A container for all particles in use by this program.
+    particleCollection  An updated particle array.
 Returns:    None
 Exception:  Safe
 Creator:    John Cox (12-17-2016)
 -----------------------------------------------------------------------------------------------*/
 void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numParticles)
 {
+    // numParticles should be no larger that Particle::_MAX_PARTICLES; if it is; the crash is 
+    // deserved :)
+    memcpy(_localParticleArray, particleCollection, numParticles);
+
+
     for (size_t particleIndex = 0; particleIndex < numParticles; particleIndex++)
     {
-        Particle &p = particleCollection[particleIndex];
+        Particle &p = _localParticleArray[particleIndex];
         if (p._isActive == 0)
         {
             // only add active particles
@@ -291,7 +297,7 @@ void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numP
             }
         }
 
-        AddParticleToNode(particleIndex, nodeIndex, particleCollection);
+        AddParticleToNode(particleIndex, nodeIndex, _localParticleArray);
     }
 
     _completedNodePopulations++;
@@ -300,6 +306,10 @@ void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numP
 // TODO: header
 const ParticleQuadTreeNode *ParticleQuadTree::CurrentBuffer() const
 {
+    if (_numActiveNodes > 4)
+    {
+        printf("");
+    }
     return _allNodes;
 }
 
@@ -333,7 +343,7 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex, Parti
     // don't bother checking the pointer; if a null pointer was passed, just crash
     ParticleQuadTreeNode &node = _allNodes[nodeIndex];
 
-    if (node._numCurrentParticles == ParticleQuadTreeNode::MAX_PARTICLES_PER_QUAD_TREE_NODE)
+    if (node._numCurrentParticles == ParticleQuadTreeNode::_MAX_PARTICLES_PER_QUAD_TREE_NODE)
     {
         if (!SubdivideNode(nodeIndex, particleCollection))
         {
@@ -425,6 +435,7 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex, Particle *particleCollection
     // with 26 neighbors ((3 * 3 * 3) - 1 center node).
 
     ParticleQuadTreeNode &childTopLeft = _allNodes[childNodeIndexTopLeft];
+    childTopLeft._inUse = 1;
     childTopLeft._neighborIndexLeft = node._neighborIndexLeft;
     childTopLeft._neighborIndexTopLeft = node._neighborIndexTopLeft;
     childTopLeft._neighborIndexTop = node._neighborIndexTop;
@@ -439,6 +450,7 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex, Particle *particleCollection
     childTopLeft._bottomEdge = nodeCenterY;
 
     ParticleQuadTreeNode &childTopRight = _allNodes[childNodeIndexTopRight];
+    childTopRight._inUse = 1;
     childTopRight._neighborIndexLeft = childNodeIndexTopLeft;
     childTopRight._neighborIndexTopLeft = node._neighborIndexTop;
     childTopRight._neighborIndexTop = node._neighborIndexTop;
@@ -453,6 +465,7 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex, Particle *particleCollection
     childTopRight._bottomEdge = nodeCenterY;
 
     ParticleQuadTreeNode &childBottomRight = _allNodes[childNodeIndexBottomRight];
+    childBottomRight._inUse = 1;
     childBottomRight._neighborIndexLeft = childNodeIndexBottomLeft;
     childBottomRight._neighborIndexTopLeft = childNodeIndexTopLeft;
     childBottomRight._neighborIndexTop = childNodeIndexTopRight;
@@ -467,6 +480,7 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex, Particle *particleCollection
     childBottomRight._bottomEdge = node._bottomEdge;
 
     ParticleQuadTreeNode &childBottomLeft = _allNodes[childNodeIndexBottomLeft];
+    childBottomLeft._inUse = 1;
     childBottomLeft._neighborIndexLeft = node._neighborIndexLeft;
     childBottomLeft._neighborIndexTopLeft = node._neighborIndexLeft;
     childBottomLeft._neighborIndexTop = childNodeIndexTopLeft;
@@ -526,6 +540,9 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex, Particle *particleCollection
         // still like to clean up after myself in case of debugging
         node._indicesForContainedParticles[particleCount] = -1;
     }
+
+    // reset the subdivided node's particle count so that it doesn't try to subdivide again
+    node._numCurrentParticles = 0;
 }
 
 
