@@ -46,6 +46,7 @@ FreeTypeAtlas::FreeTypeAtlas(const int uniformTextSamplerLoc, const int uniformT
     _textureId(0),
     _textureUnit(0),
     _vboId(0),
+    _maxBufferSizeBytes(0),
     _vaoId(0),
     _textureSamplerId(0),
     _textureSamplerNum(0),
@@ -445,7 +446,7 @@ Returns:    None
 Creator:    John Cox (4-2016)
 -----------------------------------------------------------------------------------------------*/
 void FreeTypeAtlas::RenderText(const std::string &str, const float posScreenCoord[2],
-    const float userScale[2], const float color[4]) const
+    const float userScale[2], const float color[4])
 {
     // the text will be drawn, in part, via a manipulation of pixel alpha values, and apparently
     // OpenGL's blending does this
@@ -527,7 +528,9 @@ void FreeTypeAtlas::RenderText(const std::string &str, const float posScreenCoor
         // are provided in a rectangle that goes from top left to bottom right.  OpenGL is the 
         // odd one out in the world of rectangles, and it draws textures from lower left 
         // ([S=0,T=0]) to upper right ([S=1,T=1]).  This means that the texture, from OpenGL's 
-        // perspective, is "upside down", hence "t top" being assigned to the bottom screen coordinate and "t bottom" being assigned to the top screen coordinate.  Yay for different standards.
+        // perspective, is "upside down", hence "t top" being assigned to the bottom screen 
+        // coordinate and "t bottom" being assigned to the top screen coordinate.  Yay for 
+        // different standards.
         point box[4] = {
             { screenCoordLeft, screenCoordBottom, sLeft, tTop },
             { screenCoordRight, screenCoordBottom, sRight, tTop },
@@ -548,13 +551,12 @@ void FreeTypeAtlas::RenderText(const std::string &str, const float posScreenCoor
     }
 
     // load up the data, and only reallocate if you need too
-    static unsigned int maxBufferSizeBytes = 0;
     unsigned int numBytes = glyphBoxes.size() * sizeof(point);
-    if (numBytes > maxBufferSizeBytes)
+    if (numBytes > _maxBufferSizeBytes)
     {
         // give a little more space than is necessary
-        maxBufferSizeBytes = numBytes + 5;
-        glBufferData(GL_ARRAY_BUFFER, maxBufferSizeBytes, glyphBoxes.data(), GL_DYNAMIC_DRAW);
+        _maxBufferSizeBytes = numBytes + 5;
+        glBufferData(GL_ARRAY_BUFFER, _maxBufferSizeBytes, glyphBoxes.data(), GL_DYNAMIC_DRAW);
     }
     else
     {

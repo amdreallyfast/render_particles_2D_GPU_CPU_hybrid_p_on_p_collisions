@@ -24,7 +24,7 @@ public:
     bool Init(const FT_Face face, const int fontPixelHeightSize);
 
     void RenderText(const std::string &str, const float posScreenCoord[2],
-        const float userScale[2], const float color[4]) const;
+        const float userScale[2], const float color[4]);
 private:
     // have to reference it on every draw call, so keep it around
     // Note: It is actually a GLuint, which is a typedef of "unsigned int", but I don't want to 
@@ -39,6 +39,7 @@ private:
     // to make a buffer object that would be used by potentially multiple atlases, so let the 
     // atlas make its own.
     unsigned int _vboId;
+    unsigned int _maxBufferSizeBytes;
 
     // each vertex buffer needs a set of vertex attributes
     unsigned int _vaoId;

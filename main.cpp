@@ -366,21 +366,32 @@ void UpdateAllTheThings()
     GLuint copyBufferId1;
     glGenBuffers(1, &copyBufferId1);
     glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferId1);
+
+
+    // particles
     glBufferData(GL_COPY_WRITE_BUFFER, gpParticleBuffer->BufferSizeBytes(), 0, GL_DYNAMIC_COPY);
     glBindBuffer(GL_COPY_READ_BUFFER, gpParticleBuffer->BufferId());
     glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, gpParticleBuffer->BufferSizeBytes());
     void *bufferPtr = glMapBuffer(GL_COPY_WRITE_BUFFER, GL_READ_ONLY);
     Particle *particleObjPtr = static_cast<Particle *>(bufferPtr);
-    //for (size_t i = 0; i < MAX_PARTICLES; i++)
+    //int activeCounter = 0;
+    //int inactiveCounter = 0;
+    //for (size_t i = 0; i < Particle::MAX_PARTICLES; i++)
     //{
-    //    Particle &p = particleObjPtr[i];
-    //    if (p._indexOfNodeThatItIsOccupying >= MAX_PARTICLES)
+    //    if (particleObjPtr[i]._isActive == 0)
     //    {
-    //        printf("");
+    //        inactiveCounter++;
+    //    }
+    //    else
+    //    {
+    //        activeCounter++;
     //    }
     //}
+    //printf("Update() loop: active: %5d, inactive: %5d\n", activeCounter, inactiveCounter);
 
-    //glBufferData(GL_COPY_WRITE_BUFFER, gpQuadTreeBuffer->BufferSizeBytes, 0, GL_DYNAMIC_COPY);
+
+    // nodes
+    //glBufferData(GL_COPY_WRITE_BUFFER, gpQuadTreeBuffer->BufferSizeBytes(), 0, GL_DYNAMIC_COPY);
     //glBindBuffer(GL_COPY_READ_BUFFER, gpQuadTreeBuffer->BufferId());
     //glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, gpQuadTreeBuffer->BufferSizeBytes());
     //void *bufferPtr = glMapBuffer(GL_COPY_WRITE_BUFFER, GL_READ_ONLY);
@@ -481,7 +492,8 @@ void Display()
 
     // draw text on top of the rendered items
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("freetype"));
-    GLfloat color[4] = { 0.5f, 0.5f, 0.0f, 1.0f };
+    //GLfloat color[4] = { 0.5f, 0.5f, 0.0f, 1.0f };
+    GLfloat color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
     char str[32];
     int pointSize = 32;
     float scaleXY[2] = { 1.0f, 1.0f };
@@ -523,10 +535,41 @@ void Display()
     float numActiveParticlesXY[2] = { -0.99f, +0.7f };
     gTextAtlases.GetAtlas(pointSize)->RenderText(str, numActiveParticlesXY, scaleXY, color);
 
-    // now draw the number of active quad tree nodes
-    sprintf(str, "nodes: %d", gpQuadTree->NumActiveNodes());
-    float numActiveNodesXY[2] = { -0.99f, +0.5f };
-    gTextAtlases.GetAtlas(pointSize)->RenderText(str, numActiveNodesXY, scaleXY, color);
+    //// now draw the number of active quad tree nodes
+    //sprintf(str, "nodes: %d", gpQuadTree->NumActiveNodes());
+    //float numActiveNodesXY[2] = { -0.99f, +0.5f };
+    //gTextAtlases.GetAtlas(pointSize)->RenderText(str, numActiveNodesXY, scaleXY, color);
+
+
+
+    //GLuint copyBufferId1;
+    //glGenBuffers(1, &copyBufferId1);
+    //glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferId1);
+    //glBufferData(GL_COPY_WRITE_BUFFER, gpQuadTreeBuffer->BufferSizeBytes(), 0, GL_DYNAMIC_COPY);
+    //glBindBuffer(GL_COPY_READ_BUFFER, gpQuadTreeBuffer->BufferId());
+    //glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, gpQuadTreeBuffer->BufferSizeBytes());
+    //void *bufferPtr = glMapBuffer(GL_COPY_WRITE_BUFFER, GL_READ_ONLY);
+    //ParticleQuadTreeNode *nodeObjPtr = static_cast<ParticleQuadTreeNode *>(bufferPtr);
+    //for (size_t i = 0; i < ParticleQuadTree::MAX_NODES; i++)
+    //{
+    //    ParticleQuadTreeNode &node = nodeObjPtr[i];
+    //    if (node._inUse && node._isSubdivided == 0)
+    //    {
+    //        //sprintf(str, "%d", i);  // index number
+    //        sprintf(str, "%d", node._numCurrentParticles);
+    //        float frameRateXY[2] = { node._leftEdge + 0.01f, node._bottomEdge + 0.01f };
+    //        gTextAtlases.GetAtlas(24)->RenderText(str, frameRateXY, scaleXY, color);
+    //    }
+    //}
+    //glUnmapBuffer(GL_COPY_WRITE_BUFFER);
+    //glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+    //glBindBuffer(GL_COPY_READ_BUFFER, 0);
+    //glDeleteBuffers(1, &copyBufferId1);
+
+
+
+
+
 
 
     // clean up bindings

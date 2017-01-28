@@ -191,8 +191,7 @@ void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numP
 {
     // numParticles should be no larger that Particle::MAX_PARTICLES; if it is; the crash is 
     // deserved :)
-    memcpy(_localParticleArray, particleCollection, numParticles);
-
+    memcpy(_localParticleArray, particleCollection, sizeof(Particle) * numParticles);
 
     for (size_t particleIndex = 0; particleIndex < numParticles; particleIndex++)
     {
@@ -236,7 +235,9 @@ void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numP
             }
         }
 
-        AddParticleToNode(particleIndex, nodeIndex, _localParticleArray);
+        //AddParticleToNode(particleIndex, nodeIndex, _localParticleArray);
+        _allNodes[nodeIndex]._numCurrentParticles++;
+
     }
 
     _completedNodePopulations++;

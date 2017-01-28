@@ -29,6 +29,11 @@ struct Particle
         _indexOfNodeThatItIsOccupying(0),
         _isActive(0)
     {
+        // giving the padding some conspicuous numbers so that I can debug with them for byte 
+        // misalignments, if necessary
+        _padding[0] = 3;
+        _padding[1] = 15;
+        _padding[2] = 99;
     }
 
     // TODO: add "previous position" too (for collision detection with solids)

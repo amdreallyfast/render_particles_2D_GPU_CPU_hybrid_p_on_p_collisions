@@ -100,6 +100,12 @@ Creator: John Cox (9-25-2016)
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
+
+//    if (index >= uMaxParticleCount)
+//    {
+//        return;
+//    }
+
     if (index < uMaxParticleCount)
     {
         Particle p = AllParticles[index];

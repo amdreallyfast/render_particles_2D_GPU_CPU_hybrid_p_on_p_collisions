@@ -187,11 +187,6 @@ void ComputeControllerParticleReset::ResetParticles(unsigned int particlesPerEmi
         const ParticleEmitterPoint *emitter = _pointEmitters[pointEmitterCount];
         glUniform1f(_unifLocMinParticleVelocity, emitter->GetMinVelocity());
         glUniform1f(_unifLocDeltaParticleVelocity, emitter->GetDeltaVelocity());
-
-        // use an array for uploading vectors to be certain of the ordering 
-        //glm::vec4 emitterPos = emitter->GetPos();
-        //float emitterPosArr[4] = { emitterPos.x, emitterPos.y, emitterPos.z, emitterPos.w };
-        //glUniform4fv(_unifLocPointEmitterCenter, 1, emitterPosArr);
         glUniform4fv(_unifLocPointEmitterCenter, 1, glm::value_ptr(emitter->GetPos()));
 
         // compute ALL the resets!
@@ -218,17 +213,6 @@ void ComputeControllerParticleReset::ResetParticles(unsigned int particlesPerEmi
         glUniform1f(_unifLocDeltaParticleVelocity, emitter->GetDeltaVelocity());
 
         // each bar needs to upload three vectors (p1, p2, and emit direction)
-
-        //glm::vec4 emitterBarP1 = emitter->GetBarStart();
-        //glm::vec4 emitterBarP2 = emitter->GetBarEnd();
-        //glm::vec4 emitDir = emitter->GetEmitDir();
-        //float emitterBarP1Arr[4] = { emitterBarP1.x, emitterBarP1.y, emitterBarP1.z, emitterBarP1.w };
-        //float emitterBarP2Arr[4] = { emitterBarP2.x, emitterBarP2.y, emitterBarP2.z, emitterBarP2.w };
-        //float emitterBarEmitDir[4] = { emitDir.x, emitDir.y, emitDir.z, emitDir.w };
-        //glUniform4fv(_unifLocBarEmitterP1, 1, emitterBarP1Arr);
-        //glUniform4fv(_unifLocBarEmitterP2, 1, emitterBarP2Arr);
-        //glUniform4fv(_unifLocBarEmitterEmitDir, 1, emitterBarEmitDir);
-
         glUniform4fv(_unifLocBarEmitterP1, 1, glm::value_ptr(emitter->GetBarStart()));
         glUniform4fv(_unifLocBarEmitterP2, 1, glm::value_ptr(emitter->GetBarEnd()));
         glUniform4fv(_unifLocBarEmitterEmitDir, 1, glm::value_ptr(emitter->GetEmitDir()));
