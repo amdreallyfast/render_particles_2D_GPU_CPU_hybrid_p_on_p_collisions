@@ -23,11 +23,12 @@ public:
     unsigned int BufferId() const;
     unsigned int DrawStyle() const;
     unsigned int NumVertices() const;
-
-    //static unsigned int GetStorageBlockBindingPointIndexForBuffer(const std::string &bufferNameInShader);
+    unsigned int BufferSizeBytes() const;
 
 protected:
     // can't be private because the derived classes need to set them or read them
+
+    unsigned int _bufferSizeBytes;
 
     // save on the large header inclusion of OpenGL and write out these primitive types instead 
     // of using the OpenGL typedefs

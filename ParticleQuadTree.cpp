@@ -95,115 +95,67 @@ ParticleQuadTree::ParticleQuadTree(const glm::vec4 &particleRegionCenter, float 
         // no bottom left neighbor
     }
 
-    
     _numActiveNodes = FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES;
-
-
-
-    //// start with a single subdivision
-    //int numInitialRows = 2;
-    //int numInitialColumns = 2;
-
-    //// starting at the origin (upper left corner of the 2D particle region)
-    //// Note: Unlike most rectangles in graphical programming, OpenGL's begin at the lower left.  
-    //// Beginning at the upper left, as this algorithm does, means that X and Y are not (0,0), 
-    //// but X and Y are (0, max).
-    //float xBegin = particleRegionCenter.x - particleRegionRadius;
-    //float yBegin = particleRegionCenter.y + particleRegionRadius;
-
-    //float xIncrementPerNode = 2.0f * particleRegionRadius / numInitialRows;
-    //float yIncrementPerNode = 2.0f * particleRegionRadius / numInitialColumns;
-
-    //float y = yBegin;
-    //for (int row = 0; row < numInitialRows; row++)
-    //{
-    //    float x = xBegin;
-    //    for (int column = 0; column < numInitialColumns; column++)
-    //    {
-    //        int nodeIndex = (row * numInitialColumns) + column;
-    //        ParticleQuadTreeNode &node = _allNodes[nodeIndex];
-    //        node._inUse = true;
-
-    //        // set the borders of the node
-    //        node._leftEdge = x;
-    //        node._rightEdge = x + xIncrementPerNode;
-    //        node._topEdge = y;
-    //        node._bottomEdge = y - yIncrementPerNode;
-
-    //        // assign neighbors
-    //        // Note: Nodes on the edge of the initial tree have three null neighbors.  There may 
-    //        // be other ways to calculate these, but I chose the following because it is spelled 
-    //        // out verbosely.
-    //        // Ex: a top - row node has null top left, top, and top right neighbors.
-
-    //        // left edge does not have a "left" neighbor
-    //        if (column > 0)
-    //        {
-    //            node._neighborIndexLeft = nodeIndex - 1;
-    //        }
-
-    //        // left and top edges do not have a "top left" neighbor
-    //        if (row > 0 && column > 0)
-    //        {
-    //            // "top left" neighbor = current node - 1 row - 1 column
-    //            node._neighborIndexTopLeft = nodeIndex - numInitialColumns - 1;
-    //        }
-
-    //        // top row does not have a "top" neighbor
-    //        if (row > 0)
-    //        {
-    //            node._neighborIndexTop = nodeIndex - numInitialColumns;
-    //        }
-
-    //        // top right edges do not have a "top right" neighbor
-    //        if (row > 0 && column < (numInitialColumns - 1))
-    //        {
-    //            // "top right" neighbor = current node - 1 row + 1 column
-    //            node._neighborIndexTopRight = nodeIndex - numInitialColumns + 1;
-    //        }
-
-    //        // right edge does not have a "right" neighbor
-    //        if (column < (numInitialColumns - 1))
-    //        {
-    //            node._neighborIndexRight = nodeIndex + 1;
-    //        }
-
-    //        // right and bottom edges do not have a "bottom right" neighbor
-    //        if (row < (numInitialRows - 1) &&
-    //            column < (numInitialColumns - 1))
-    //        {
-    //            // "bottom right" neighbor = current node + 1 row + 1 column
-    //            node._neighborIndexBottomRight = nodeIndex + numInitialColumns + 1;
-    //        }
-
-    //        // bottom edge does not have a "bottom" neighbor
-    //        if (row < (numInitialRows - 1))
-    //        {
-    //            node._neighborIndexBottom = nodeIndex + numInitialColumns;
-    //        }
-
-    //        // left and bottom edges do not have a "bottom left" neighbor
-    //        if (row < (numInitialRows - 1) && column > 0)
-    //        {
-    //            // bottom left neighbor = current node + 1 row - 1 column
-    //            node._neighborIndexBottomLeft = nodeIndex + numInitialColumns - 1;
-    //        }
-
-    //        // setup for next node
-    //        x += xIncrementPerNode;
-    //    }
-
-    //    // end of row, increment to the next one
-    //    y -= yIncrementPerNode;
-    //}
 }
 
 // TODO: header
+// Note: I tried doing this reset by manually resetting the first 4 and then doing a memset(...) on the rest, but I didn't see any effect on framerate, so I'm using the smaller and cleaner code, which is a loop.
+
 void ParticleQuadTree::ResetTree()
 {
     _numActiveNodes = FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES;
 
-    for (int nodeIndex = 0; nodeIndex < _MAX_NODES; nodeIndex++)
+    //// top left
+    //{
+    //    ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::TOP_LEFT];
+    //    node._numCurrentParticles = 0;
+    //    node._isSubdivided = 0;
+    //    node._childNodeIndexTopLeft = -1;
+    //    node._childNodeIndexTopRight = -1;
+    //    node._childNodeIndexBottomLeft = -1;
+    //    node._childNodeIndexBottomRight = -1;
+    //}
+
+    //// top right
+    //{
+    //    ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::TOP_RIGHT];
+    //    node._numCurrentParticles = 0;
+    //    node._isSubdivided = 0;
+    //    node._childNodeIndexTopLeft = -1;
+    //    node._childNodeIndexTopRight = -1;
+    //    node._childNodeIndexBottomLeft = -1;
+    //    node._childNodeIndexBottomRight = -1;
+    //}
+
+    //// bottom left
+    //{
+    //    ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::BOTTOM_LEFT];
+    //    node._numCurrentParticles = 0;
+    //    node._isSubdivided = 0;
+    //    node._childNodeIndexTopLeft = -1;
+    //    node._childNodeIndexTopRight = -1;
+    //    node._childNodeIndexBottomLeft = -1;
+    //    node._childNodeIndexBottomRight = -1;
+    //}
+
+    //// bottom right
+    //{
+    //    ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::BOTTOM_RIGHT];
+    //    node._numCurrentParticles = 0;
+    //    node._isSubdivided = 0;
+    //    node._childNodeIndexTopLeft = -1;
+    //    node._childNodeIndexTopRight = -1;
+    //    node._childNodeIndexBottomLeft = -1;
+    //    node._childNodeIndexBottomRight = -1;
+    //}
+
+    //// wipe out the rest of the nodes
+    //ParticleQuadTreeNode *startHere = &_allNodes[FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES];
+    //size_t numBytes = sizeof(ParticleQuadTreeNode) * (MAX_NODES - FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES);
+    //memset(startHere, 0, numBytes);
+
+
+    for (int nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++)
     {
         ParticleQuadTreeNode &node = _allNodes[nodeIndex];
 
@@ -222,20 +174,7 @@ void ParticleQuadTree::ResetTree()
     }
 
     printf("");
-    // TODO: try a memset to 0 from _allNodes[FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES] to _allNodes[_MAX_NODES - 1]
-
-    //// top left
-    //ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::TOP_LEFT];
-
-    //// top right
-    //node = _allNodes[FIRST_FOUR_NODE_INDEXES::TOP_RIGHT];
-
-    //// bottom left
-    //node = _allNodes[FIRST_FOUR_NODE_INDEXES::BOTTOM_LEFT];
-
-    //// bottom right
-    //node = _allNodes[FIRST_FOUR_NODE_INDEXES::BOTTOM_RIGHT];
-
+    // TODO: try a memset to 0 from _allNodes[FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES] to _allNodes[MAX_NODES - 1]
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -250,7 +189,7 @@ Creator:    John Cox (12-17-2016)
 -----------------------------------------------------------------------------------------------*/
 void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numParticles)
 {
-    // numParticles should be no larger that Particle::_MAX_PARTICLES; if it is; the crash is 
+    // numParticles should be no larger that Particle::MAX_PARTICLES; if it is; the crash is 
     // deserved :)
     memcpy(_localParticleArray, particleCollection, numParticles);
 
@@ -301,15 +240,12 @@ void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numP
     }
 
     _completedNodePopulations++;
+
 }
 
 // TODO: header
 const ParticleQuadTreeNode *ParticleQuadTree::CurrentBuffer() const
 {
-    if (_numActiveNodes > 4)
-    {
-        printf("");
-    }
     return _allNodes;
 }
 
@@ -322,7 +258,7 @@ unsigned int ParticleQuadTree::NumActiveNodes() const
 // TODO: header
 unsigned int ParticleQuadTree::SizeOfAllNodesBytes() const
 {
-    return _MAX_NODES * sizeof(ParticleQuadTreeNode);
+    return MAX_NODES * sizeof(ParticleQuadTreeNode);
 }
 
 // TODO: header
@@ -343,7 +279,7 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex, Parti
     // don't bother checking the pointer; if a null pointer was passed, just crash
     ParticleQuadTreeNode &node = _allNodes[nodeIndex];
 
-    if (node._numCurrentParticles == ParticleQuadTreeNode::_MAX_PARTICLES_PER_QUAD_TREE_NODE)
+    if (node._numCurrentParticles == ParticleQuadTreeNode::MAX_PARTICLES_PER_NODE)
     {
         if (!SubdivideNode(nodeIndex, particleCollection))
         {
@@ -409,7 +345,7 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex, Particle *particleCollection
 {
     // don't bother checking the pointer; if a null pointer was passed, just crash
 
-    if (_numActiveNodes > (_MAX_NODES - 4))
+    if (_numActiveNodes > (MAX_NODES - 4))
     {
         // not enough to nodes to subdivide again
         return false;

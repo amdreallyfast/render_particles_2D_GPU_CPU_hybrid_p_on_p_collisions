@@ -2,7 +2,6 @@
 
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 layout (binding = 4, offset = 0) uniform atomic_uint acPolygonFacesInUse;
-layout (binding = 4, offset = 4) uniform atomic_uint acPolygonFacesCrudeMutex;
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -10,7 +9,7 @@ Description:
     meant for use only by ParticleQuadTree.
 Creator:    John Cox (12-17-2016)
 -----------------------------------------------------------------------------------------------*/
-const uint MAX_PARTICLES_PER_NODE = 100;
+const uint MAX_PARTICLES_PER_NODE = 25;
 struct ParticleQuadTreeNode
 {
     // this array size MUST match the value specified on the CPU side

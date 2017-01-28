@@ -6,6 +6,8 @@
 #include "glm/vec4.hpp"
 
 
+// TODO: forward declare ParticleQuadTreeNode
+
 /*-----------------------------------------------------------------------------------------------
 Description:
     Starts up the quad tree that will contain the particles.  The constructor initializes the 
@@ -34,7 +36,7 @@ public:
     void ResetNumNodePopulations();
 
 public:
-    static const int _MAX_NODES = 256 * 256;
+    static const int MAX_NODES = 256 * 256;
 
 private:
     bool AddParticleToNode(int particleIndex, int nodeIndex, Particle *particleCollection);
@@ -53,9 +55,9 @@ private:
 
 
     int _numActiveNodes;
-    ParticleQuadTreeNode _allNodes[_MAX_NODES];
+    ParticleQuadTreeNode _allNodes[MAX_NODES];
     glm::vec4 _particleRegionCenter;
     float _particleRegionRadius;
 
-    Particle _localParticleArray[Particle::_MAX_PARTICLES];
+    Particle _localParticleArray[Particle::MAX_PARTICLES];
 };

@@ -19,7 +19,5 @@ public:
     void ConfigureCompute(unsigned int computeProgramId, const std::string &bufferNameInShader) override;
     void ConfigureRender(unsigned int renderProgramId, unsigned int drawStyle) override;
 
-private:
-    unsigned int _bufferSizeBytes;
 };
 

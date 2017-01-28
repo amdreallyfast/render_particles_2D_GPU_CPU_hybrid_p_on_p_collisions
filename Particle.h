@@ -34,7 +34,7 @@ struct Particle
     // TODO: add "previous position" too (for collision detection with solids)
 
 
-    static const unsigned int _MAX_PARTICLES = 100000;
+    static const unsigned int MAX_PARTICLES = 100000;
 
 
     // even though this is a 2D program, I wasn't able to figure out the byte misalignments 
@@ -70,5 +70,6 @@ struct Particle
     int _isActive; 
     
     // any necessary padding out to 16 bytes to match the GPU's version
+    // ??is this going to mess up my specification of Particle in ParticleCollisions.comp??
     int _padding[3];
 };

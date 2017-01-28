@@ -24,6 +24,8 @@ QuadTreeNodeSsbo::QuadTreeNodeSsbo(const ParticleQuadTreeNode *nodeCollection, i
     GLuint bufferSizeBytes = sizeof(ParticleQuadTreeNode) * numNodes;
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSizeBytes, nodeCollection, GL_STATIC_DRAW);
 
+    _bufferSizeBytes = bufferSizeBytes;
+
     // cleanup
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 

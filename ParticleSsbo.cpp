@@ -31,6 +31,8 @@ ParticleSsbo::ParticleSsbo(const std::vector<Particle> &allParticles) :
     GLuint bufferSizeBytes = sizeof(Particle) * allParticles.size();
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSizeBytes, allParticles.data(), GL_STATIC_DRAW);
 
+    _bufferSizeBytes = bufferSizeBytes;
+
     // cleanup
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }

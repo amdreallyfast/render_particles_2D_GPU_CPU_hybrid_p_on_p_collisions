@@ -22,6 +22,8 @@ PolygonSsbo::PolygonSsbo(const std::vector<PolygonFace> &faceCollection) :
     GLuint bufferSizeBytes = sizeof(PolygonFace) * faceCollection.size();
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSizeBytes, faceCollection.data(), GL_STATIC_DRAW);
 
+    _bufferSizeBytes = bufferSizeBytes;
+
     // cleanup
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 

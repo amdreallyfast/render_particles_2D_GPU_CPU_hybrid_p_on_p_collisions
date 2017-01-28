@@ -111,24 +111,16 @@ unsigned int SsboBase::NumVertices() const
     return _numVertices;
 }
 
-///*-----------------------------------------------------------------------------------------------
-//Description:
-//    At this point in my demos, I have three SSBO structures: particle, polygon face, and quad tree node.  The polygon face SSBO may end up being used more than once, so there is at least 3, possibly more, SSBOs that need unique binding points.  
-//    
-//    
-//    I can't do a simple increment though, because the SSBO needs to keep its binding point index across 
-//    
-//
-//
-//Parameters: None
-//Returns:
-//    See description.
-//Creator: John Cox, 9-20-2016
-//-----------------------------------------------------------------------------------------------*/
-//unsigned int SsboBase::GetStorageBlockBindingPointIndexForBuffer(const std::string &bufferNameInShader)
-//{
-//    static GLuint ssboBindingPointIndex = 0;
-//
-//    return ssboBindingPointIndex++;
-//}
-
+/*-----------------------------------------------------------------------------------------------
+Description:
+    A simple getter for the buffer size in bytes.  Used when downloading data from the GPU or 
+    uploading data to it via glBufferSubData(...) or a mapping.
+Parameters: None
+Returns:
+    See description.
+Creator: John Cox, 1-28-2017
+-----------------------------------------------------------------------------------------------*/
+unsigned int SsboBase::BufferSizeBytes() const
+{
+    return _bufferSizeBytes;
+}
