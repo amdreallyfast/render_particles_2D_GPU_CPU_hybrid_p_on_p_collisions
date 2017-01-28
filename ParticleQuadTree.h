@@ -31,6 +31,7 @@ public:
     unsigned int NumActiveNodes() const;
     unsigned int SizeOfAllNodesBytes() const;
     int NumNodePopulations() const;
+    void ResetNumNodePopulations();
 
 public:
     static const int _MAX_NODES = 256 * 256;

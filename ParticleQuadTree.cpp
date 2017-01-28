@@ -322,6 +322,12 @@ int ParticleQuadTree::NumNodePopulations() const
 }
 
 // TODO: header
+void ParticleQuadTree::ResetNumNodePopulations()
+{
+    _completedNodePopulations = 0;
+}
+
+// TODO: header
 bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex, Particle *particleCollection)
 {
     // don't bother checking the pointer; if a null pointer was passed, just crash
