@@ -235,9 +235,7 @@ void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numP
             }
         }
 
-        //AddParticleToNode(particleIndex, nodeIndex, _localParticleArray);
-        _allNodes[nodeIndex]._numCurrentParticles++;
-
+        AddParticleToNode(particleIndex, nodeIndex, _localParticleArray);
     }
 
     _completedNodePopulations++;

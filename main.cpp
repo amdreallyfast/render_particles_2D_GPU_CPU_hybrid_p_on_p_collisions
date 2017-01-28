@@ -328,7 +328,7 @@ void Init()
 
     //gpQuadTreePopulater = new ComputeControllerPopulateQuadTree(ParticleQuadTree::MAX_NODES, MAX_PARTICLES, particleRegionRadius, particleRegionCenter, ParticleQuadTree::_NUM_COLUMNS_IN_TREE_INITIAL, ParticleQuadTree::_NUM_ROWS_IN_TREE_INITIAL, ParticleQuadTree::_NUM_STARTING_NODES, ComputeControllerPopulateQuadTreeKey);
 
-    //gpQuadTreeParticleCollider = new ComputeControllerParticleCollisions(MAX_PARTICLES, computeQuadTreeParticleColliderKey);
+    gpQuadTreeParticleCollider = new ComputeControllerParticleCollisions(Particle::MAX_PARTICLES, particleRegionCenter, computeQuadTreeParticleColliderKey);
 
     // the timer will be used for framerate calculations
     gTimer.Init();
@@ -428,7 +428,7 @@ void UpdateAllTheThings()
     // TODO: performance experiment: when doing the particle collisions, try making many more threads (divide particle population by a <256)
 
 
-    //gpQuadTreeParticleCollider->Update(deltaTimeSec);
+    gpQuadTreeParticleCollider->Update(deltaTimeSec);
     gpQuadTreeGeometryGenerator->GenerateGeometry();
 
 
@@ -477,13 +477,13 @@ void Display()
     glBindVertexArray(vaoId);
     glDrawArrays(drawStyle, 0, numVertices);
 
-    // draw the nodes of the quad tree
-    // Note: Keep using the "render geometry" shader.
-    vaoId = gpQuadTreeGeometryBuffer->VaoId();
-    drawStyle = gpQuadTreeGeometryBuffer->DrawStyle();
-    numVertices = gpQuadTreeGeometryGenerator->NumActiveFaces() * 2;
-    glBindVertexArray(vaoId);
-    glDrawArrays(drawStyle, 0, numVertices);
+    //// draw the nodes of the quad tree
+    //// Note: Keep using the "render geometry" shader.
+    //vaoId = gpQuadTreeGeometryBuffer->VaoId();
+    //drawStyle = gpQuadTreeGeometryBuffer->DrawStyle();
+    //numVertices = gpQuadTreeGeometryGenerator->NumActiveFaces() * 2;
+    //glBindVertexArray(vaoId);
+    //glDrawArrays(drawStyle, 0, numVertices);
 
     // draw the particles
     glUseProgram(ShaderStorage::GetInstance().GetShaderProgram("render particles"));
@@ -535,10 +535,10 @@ void Display()
     float numActiveParticlesXY[2] = { -0.99f, +0.7f };
     gTextAtlases.GetAtlas(pointSize)->RenderText(str, numActiveParticlesXY, scaleXY, color);
 
-    //// now draw the number of active quad tree nodes
-    //sprintf(str, "nodes: %d", gpQuadTree->NumActiveNodes());
-    //float numActiveNodesXY[2] = { -0.99f, +0.5f };
-    //gTextAtlases.GetAtlas(pointSize)->RenderText(str, numActiveNodesXY, scaleXY, color);
+    // now draw the number of active quad tree nodes
+    sprintf(str, "nodes: %d", gpQuadTree->NumActiveNodes());
+    float numActiveNodesXY[2] = { -0.99f, +0.5f };
+    gTextAtlases.GetAtlas(pointSize)->RenderText(str, numActiveNodesXY, scaleXY, color);
 
 
 
@@ -707,7 +707,7 @@ int main(int argc, char *argv[])
     glutInitContextProfile(GLUT_CORE_PROFILE);
 
     // enable this for automatic message reporting (see OpenGlErrorHandling.cpp)
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
     glutInitContextFlags(GLUT_DEBUG);
 #endif

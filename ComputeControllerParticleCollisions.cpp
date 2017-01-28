@@ -2,6 +2,7 @@
 
 #include "glload/include/glload/gl_4_4.h"
 #include "ShaderStorage.h"
+#include "glm/gtc/type_ptr.hpp"
 
 
 /*-----------------------------------------------------------------------------------------------
@@ -14,11 +15,12 @@ Parameters:
 Returns:    None
 Creator:    John Cox (1-21-2017)
 -----------------------------------------------------------------------------------------------*/
-ComputeControllerParticleCollisions::ComputeControllerParticleCollisions(unsigned int maxParticles, const std::string computeShaderKey) :
+ComputeControllerParticleCollisions::ComputeControllerParticleCollisions(unsigned int maxParticles, const glm::vec4 &particleRegionCenter, const std::string computeShaderKey) :
     _computeProgramId(0),
     _totalParticles(0),
     _unifLocMaxParticles(-1),
-    _unifLocInverseDeltaTimeSec(-1)
+    _unifLocInverseDeltaTimeSec(-1),
+    _unifLoctParticleRegionCenter(-1)
 {
     _totalParticles = maxParticles;
 
@@ -26,6 +28,8 @@ ComputeControllerParticleCollisions::ComputeControllerParticleCollisions(unsigne
 
     _unifLocMaxParticles = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticles");
     _unifLocInverseDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uInverseDeltaTimeSec");
+    _unifLoctParticleRegionCenter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uParticleRegionCenter");
+    
 
     _computeProgramId = shaderStorageRef.GetShaderProgram(computeShaderKey);
 
@@ -33,6 +37,7 @@ ComputeControllerParticleCollisions::ComputeControllerParticleCollisions(unsigne
 
     // uniform initialization
     glUniform1ui(_unifLocMaxParticles, maxParticles);
+    glUniform4fv(_unifLoctParticleRegionCenter, 1, glm::value_ptr(particleRegionCenter));
 
     // the "inverse delta time" uniform will be uploaded in Update(...)
 

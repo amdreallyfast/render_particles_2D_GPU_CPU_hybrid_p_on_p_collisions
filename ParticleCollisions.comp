@@ -169,6 +169,12 @@ Creator:    John Cox (1-3-2017)
 -----------------------------------------------------------------------------------------------*/
 void ParticleCollisionsWithinNode(uint particleIndex, uint nodeIndex)
 {
+    if (nodeIndex == -1)
+    {
+        // Note: Whichever node gave -1 for its neighbor is on the edge of quad tree
+        return;
+    }
+
     // MUST perform this condition check or else the "node._numCurrentParticles - 1" later could 
     // result in a uint being assigned -1, which is very very big
     if (AllNodes[nodeIndex]._numCurrentParticles == 0)
@@ -209,11 +215,67 @@ void ParticleCollisionsWithinNode(uint particleIndex, uint nodeIndex)
 //    }
 }
 
+
 // TODO: header
-void ParticleCollisionsWithNeighboringNode()
+// The particle is assumed to be in the node represented by startingNodeIndex.  If it isn't, for shame!
+uint FindLeafNode(uint particleIndex, uint startingNodeIndex)
 {
+    vec4 particlePosition = AllParticles[particleIndex]._pos;
+    uint nodeIndex = startingNodeIndex;
+    while(AllNodes[nodeIndex]._isSubdivided == 1)
+    {
+        // drill down to the next subdivision
+        // Note: It was already determined that the particle was in the starting node, so no bounds checking is required.  I just have to figure out where it is compared to the center (the nexus of the child nodes).
+
+        ParticleQuadTreeNode node = AllNodes[nodeIndex];
+
+        float nodeCenterX = (node._leftEdge + node._rightEdge) * 0.5f;
+        float nodeCenterY = (node._bottomEdge + node._topEdge) * 0.5f;
+
+        // TODO: try replacing conditions with index calculation via ternary operator
+        if (particlePosition.y < nodeCenterY)
+        {
+            // bottom
+            if (particlePosition.x < nodeCenterX)
+            {
+                // left
+                nodeIndex = node._childNodeIndexBottomLeft;
+            }
+            else
+            {
+                // right
+                nodeIndex = node._childNodeIndexBottomRight;
+            }
+        }
+        else
+        {
+            // top
+            if (particlePosition.x < nodeCenterX)
+            {
+                // left
+                nodeIndex = node._childNodeIndexTopLeft;
+            }
+            else
+            {
+                // right
+                nodeIndex = node._childNodeIndexTopRight;
+            }
+        }
+    }
+
+    return nodeIndex;
 }
 
+// TODO: header
+// cleans up the initial "who contains this particle?" check in main(...)
+bool ParticleOccupiesNode(uint particleIndex, uint nodeIndex)
+{
+    vec4 pPos = AllParticles[particleIndex]._pos;
+    bool horizontalCheck = (pPos.x >= AllNodes[nodeIndex]._leftEdge) && (pPos.x <= AllNodes[nodeIndex]._rightEdge);
+    bool verticalCheck = (pPos.y >= AllNodes[nodeIndex]._bottomEdge) && (pPos.y <= AllNodes[nodeIndex]._topEdge);
+
+    return horizontalCheck && verticalCheck;
+}
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -223,6 +285,7 @@ Parameters: None
 Returns:    None
 Creator: John Cox (1-21-2017) (adapted from CPU version, 12-17-2016)
 -----------------------------------------------------------------------------------------------*/
+uniform vec4 uParticleRegionCenter;
 void main()
 {
     uint particleIndex = gl_GlobalInvocationID.x;
@@ -235,92 +298,117 @@ void main()
 //    AllParticles[particleIndex]._indexOfNodeThatItIsOccupying = 13;
 
     Particle p = AllParticles[particleIndex];
-
     if (p._isActive == 0)
     {
         return;
     }
 
-    uint nodeIndex = p._indexOfNodeThatItIsOccupying;
-    ParticleCollisionsWithinNode(particleIndex, nodeIndex);
+    // drill down from the first four nodes (initial subdivision)
+
+    // TODO: try replacing conditions with index calculation via ternary operator
+    uint startingNodeIndex = -1;
+    if (ParticleOccupiesNode(particleIndex, 0))
+    {
+        startingNodeIndex = 0;
+    }
+    else if (ParticleOccupiesNode(particleIndex, 1))
+    {
+        startingNodeIndex = 1;
+    }
+    else if (ParticleOccupiesNode(particleIndex, 2))
+    {
+        startingNodeIndex = 2;
+    }
+    else if (ParticleOccupiesNode(particleIndex, 3))
+    {
+        startingNodeIndex = 3;
+    }
+    else
+    {
+        // the particle is not within the first subdivision; something has gone terribly wrong
+    }
+
+    uint leafNodeIndex = FindLeafNode(particleIndex, startingNodeIndex);
+    ParticleCollisionsWithinNode(particleIndex, leafNodeIndex);
     
-    // check against all 8 neighbors
-    ParticleQuadTreeNode node = AllNodes[nodeIndex];
 
-    float x = p._pos.x;
-    float y = p._pos.y;
-    float r = p._radiusOfInfluence;
-
-    // sin(45) == cos(45) == sqrt(2) / 2
-    // Note: The particle's region of influence is circular.  Use a radius value modified by 
-    // sin(45) to check whether the diagonal radius extends into a neighbor.
-    float sqrt2Over2 = 0.70710678118f;
-    float diagonalR = p._radiusOfInfluence * sqrt2Over2;
-
-    // remember that y increases from top to bottom (y = 0 at top, y = 1 at bottom)
-    bool xWithinThisNode = (x > node._leftEdge) && (x < node._rightEdge);
-    bool xLeft = x - r < node._leftEdge;
-    bool xRight = x + r > node._rightEdge;
-    bool xDiagonalLeft = x - diagonalR < node._leftEdge;
-    bool xDiagonalRight = x + diagonalR > node._leftEdge;
-
-    bool yWithinThisNode = (y > node._topEdge) && (y < node._bottomEdge);
-    bool yTop = y - r < node._topEdge;
-    bool yBottom = y + r > node._bottomEdge;
-    bool yDiagonalTop = y - diagonalR < node._topEdge;
-    bool yDiagonalBottom = y + diagonalR > node._bottomEdge;
-
-    bool topLeft = xDiagonalLeft && yDiagonalTop;
-    bool top = xWithinThisNode && yTop;
-    bool topRight = xDiagonalRight && yDiagonalTop;
-    bool right = xRight && yWithinThisNode;
-    bool bottomRight = xDiagonalRight && yDiagonalBottom;
-    bool bottom = xWithinThisNode && yBottom;
-    bool bottomLeft = xDiagonalLeft && yDiagonalBottom;
-    bool left = xLeft && yWithinThisNode;
-
-    // Note: If a particle is in a corner of a small particle region, it is possible for its 
-    // region of influence to extend into multiple neighbors, so just use if(...) and not 
-    // else if(...).
-    if (topLeft)
-    {
-        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexTopLeft);
-    }
-
-    if (top)
-    {
-        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexTop);
-    }
-
-    if (topRight)
-    {
-        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexTopRight);
-    }
-
-    if (right)
-    {
-        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexRight);
-    }
-
-    if (bottomRight)
-    {
-        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexBottomRight);
-    }
-
-    if (bottom)
-    {
-        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexBottom);
-    }
-
-    if (bottomLeft)
-    {
-        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexBottomLeft);
-    }
-
-    if (left)
-    {
-        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexLeft);
-    }
+//    // check against all 8 neighbors
+//    ParticleQuadTreeNode node = AllNodes[nodeIndex];
+//
+//    float x = p._pos.x;
+//    float y = p._pos.y;
+//    float r = p._radiusOfInfluence;
+//
+//    // sin(45) == cos(45) == sqrt(2) / 2
+//    // Note: The particle's region of influence is circular.  Use a radius value modified by 
+//    // sin(45) to check whether the diagonal radius extends into a neighbor.
+//    float sqrt2Over2 = 0.70710678118f;
+//    float diagonalR = p._radiusOfInfluence * sqrt2Over2;
+//
+//    // remember that y increases from top to bottom (y = 0 at top, y = 1 at bottom)
+//    bool xWithinThisNode = (x > node._leftEdge) && (x < node._rightEdge);
+//    bool xLeft = x - r < node._leftEdge;
+//    bool xRight = x + r > node._rightEdge;
+//    bool xDiagonalLeft = x - diagonalR < node._leftEdge;
+//    bool xDiagonalRight = x + diagonalR > node._leftEdge;
+//
+//    bool yWithinThisNode = (y > node._topEdge) && (y < node._bottomEdge);
+//    bool yTop = y - r < node._topEdge;
+//    bool yBottom = y + r > node._bottomEdge;
+//    bool yDiagonalTop = y - diagonalR < node._topEdge;
+//    bool yDiagonalBottom = y + diagonalR > node._bottomEdge;
+//
+//    bool topLeft = xDiagonalLeft && yDiagonalTop;
+//    bool top = xWithinThisNode && yTop;
+//    bool topRight = xDiagonalRight && yDiagonalTop;
+//    bool right = xRight && yWithinThisNode;
+//    bool bottomRight = xDiagonalRight && yDiagonalBottom;
+//    bool bottom = xWithinThisNode && yBottom;
+//    bool bottomLeft = xDiagonalLeft && yDiagonalBottom;
+//    bool left = xLeft && yWithinThisNode;
+//
+//    // Note: If a particle is in a corner of a small particle region, it is possible for its 
+//    // region of influence to extend into multiple neighbors, so just use if(...) and not 
+//    // else if(...).
+//    if (topLeft)
+//    {
+//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexTopLeft);
+//    }
+//
+//    if (top)
+//    {
+//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexTop);
+//    }
+//
+//    if (topRight)
+//    {
+//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexTopRight);
+//    }
+//
+//    if (right)
+//    {
+//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexRight);
+//    }
+//
+//    if (bottomRight)
+//    {
+//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexBottomRight);
+//    }
+//
+//    if (bottom)
+//    {
+//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexBottom);
+//    }
+//
+//    if (bottomLeft)
+//    {
+//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexBottomLeft);
+//    }
+//
+//    if (left)
+//    {
+//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexLeft);
+//    }
 
 }
 

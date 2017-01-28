@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "glm/vec4.hpp"
 
 
 /*-----------------------------------------------------------------------------------------------
@@ -13,7 +14,7 @@ Creator:    John Cox (1-21-2017)
 class ComputeControllerParticleCollisions
 {
 public:
-    ComputeControllerParticleCollisions(unsigned int maxParticles, const std::string computeShaderKey);
+    ComputeControllerParticleCollisions(unsigned int maxParticles, const glm::vec4 &particleRegionCenter, const std::string computeShaderKey);
 
     // no destructor because there are no buffers that need to be destroyed
 
@@ -25,5 +26,6 @@ private:
 
     int _unifLocMaxParticles;
     int _unifLocInverseDeltaTimeSec;
+    int _unifLoctParticleRegionCenter;
 };
 
