@@ -1,4 +1,4 @@
-#include "ComputeQuadTreeParticleCollisions.h"
+#include "ComputeControllerParticleCollisions.h"
 
 #include "glload/include/glload/gl_4_4.h"
 #include "ShaderStorage.h"
@@ -14,7 +14,7 @@ Parameters:
 Returns:    None
 Creator:    John Cox (1-21-2017)
 -----------------------------------------------------------------------------------------------*/
-ComputeParticleQuadTreeCollisions::ComputeParticleQuadTreeCollisions(unsigned int maxParticles, const std::string computeShaderKey) :
+ComputeControllerParticleCollisions::ComputeControllerParticleCollisions(unsigned int maxParticles, const std::string computeShaderKey) :
     _computeProgramId(0),
     _totalParticles(0),
     _unifLocMaxParticles(-1),
@@ -48,7 +48,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (1-21-2017)
 -----------------------------------------------------------------------------------------------*/
-void ComputeParticleQuadTreeCollisions::Update(float deltaTimeSec)
+void ComputeControllerParticleCollisions::Update(float deltaTimeSec)
 {
     // calculate the number of work groups and start the magic
     GLuint numWorkGroupsX = (_totalParticles / 256) + 1;

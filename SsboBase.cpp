@@ -2,14 +2,20 @@
 
 #include "glload/include/glload/gl_4_4.h"
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    A helper function so that I don't have to hard-code a unique binding point index for each 
+    SSBO.
+Parameters: None
+Returns:    None
+Creator: John Cox, 1-16-2017
+-----------------------------------------------------------------------------------------------*/
 static unsigned int GetNewStorageBlockBindingPointIndex()
 {
     static GLuint ssboBindingPointIndex = 0;
 
     return ssboBindingPointIndex++;
 }
-
 
 /*-----------------------------------------------------------------------------------------------
 Description:

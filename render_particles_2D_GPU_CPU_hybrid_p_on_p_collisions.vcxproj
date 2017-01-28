@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{612CB533-6A7D-4936-B6E9-9646D44C868D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>render_particles_2D_GPU_p_on_p_collisions
+    <RootNamespace>render_particles_2D_GPU_CPU_hybrid_p_on_p_collisions
     </RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -146,12 +146,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ComputeParticleReset.cpp" />
-    <ClCompile Include="ComputeParticleUpdate.cpp" />
-    <ClCompile Include="ComputeQuadTreeGenerateGeometry.cpp" />
-    <ClCompile Include="ComputeQuadTreeParticleCollisions.cpp" />
-    <ClCompile Include="ComputeQuadTreePopulate.cpp" />
-    <ClCompile Include="ComputeQuadTreeReset.cpp" />
+    <ClCompile Include="ComputeControllerGenerateQuadTreeGeometry.cpp" />
+    <ClCompile Include="ComputeControllerParticleCollisions.cpp" />
+    <ClCompile Include="ComputeControllerParticleReset.cpp" />
+    <ClCompile Include="ComputeControllerParticleUpdate.cpp" />
+    <ClCompile Include="ComputeControllerPopulateQuadTree.cpp" />
+    <ClCompile Include="ComputeControllerResetQuadTree.cpp" />
     <ClCompile Include="FreeTypeAtlas.cpp" />
     <ClCompile Include="FreeTypeEncapsulated.cpp" />
     <ClCompile Include="main.cpp" />
@@ -169,27 +169,12 @@
     <ClCompile Include="Stopwatch.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="freeType.frag" />
-    <None Include="freeType.vert" />
-    <None Include="particlePolygonRegion.comp" />
-    <None Include="particleRender.frag" />
-    <None Include="particleRender.vert" />
-    <None Include="geometry.frag" />
-    <None Include="geometry.vert" />
-    <None Include="particleReset.comp" />
-    <None Include="particleUpdate.comp" />
-    <None Include="quadTreeGenerateGeometry.comp" />
-    <None Include="quadTreeParticleCollisions.comp" />
-    <None Include="quadTreePopulate.comp" />
-    <None Include="quadTreeReset.comp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="ComputeParticleReset.h" />
-    <ClInclude Include="ComputeParticleUpdate.h" />
-    <ClInclude Include="ComputeQuadTreeGenerateGeometry.h" />
-    <ClInclude Include="ComputeQuadTreeParticleCollisions.h" />
-    <ClInclude Include="ComputeQuadTreePopulate.h" />
-    <ClInclude Include="ComputeQuadTreeReset.h" />
+    <ClInclude Include="ComputeControllerGenerateQuadTreeGeometry.h" />
+    <ClInclude Include="ComputeControllerParticleCollisions.h" />
+    <ClInclude Include="ComputeControllerParticleReset.h" />
+    <ClInclude Include="ComputeControllerParticleUpdate.h" />
+    <ClInclude Include="ComputeControllerPopulateQuadTree.h" />
+    <ClInclude Include="ComputeControllerResetQuadTree.h" />
     <ClInclude Include="FreeTypeAtlas.h" />
     <ClInclude Include="FreeTypeEncapsulated.h" />
     <ClInclude Include="MyVertex.h" />
@@ -209,6 +194,20 @@
     <ClInclude Include="RandomToast.h" />
     <ClInclude Include="ShaderStorage.h" />
     <ClInclude Include="Stopwatch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FreeType.frag" />
+    <None Include="FreeType.vert" />
+    <None Include="GenerateQuadTreeGeometry.comp" />
+    <None Include="Geometry.frag" />
+    <None Include="Geometry.vert" />
+    <None Include="ParticleCollisions.comp" />
+    <None Include="ParticleRender.frag" />
+    <None Include="ParticleRender.vert" />
+    <None Include="ParticleReset.comp" />
+    <None Include="ParticleUpdate.comp" />
+    <None Include="PopulateQuadTree.comp" />
+    <None Include="ResetQuadTree.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

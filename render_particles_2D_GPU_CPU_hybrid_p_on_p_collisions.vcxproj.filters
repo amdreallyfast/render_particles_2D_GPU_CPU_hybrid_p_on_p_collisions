@@ -32,29 +32,29 @@
     <ClCompile Include="PolygonSsbo.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
-    <ClCompile Include="ComputeParticleReset.cpp">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeParticleUpdate.cpp">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClCompile>
     <ClCompile Include="ParticleQuadTree.cpp">
       <Filter>Particles</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeQuadTreeReset.cpp">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeQuadTreePopulate.cpp">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeQuadTreeGenerateGeometry.cpp">
-      <Filter>ComputeShaderLaunchers</Filter>
     </ClCompile>
     <ClCompile Include="QuadTreeNodeSsbo.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
-    <ClCompile Include="ComputeQuadTreeParticleCollisions.cpp">
-      <Filter>ComputeShaderLaunchers</Filter>
+    <ClCompile Include="ComputeControllerGenerateQuadTreeGeometry.cpp">
+      <Filter>ComputeControllers</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeControllerParticleCollisions.cpp">
+      <Filter>ComputeControllers</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeControllerParticleReset.cpp">
+      <Filter>ComputeControllers</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeControllerParticleUpdate.cpp">
+      <Filter>ComputeControllers</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeControllerPopulateQuadTree.cpp">
+      <Filter>ComputeControllers</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeControllerResetQuadTree.cpp">
+      <Filter>ComputeControllers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -96,74 +96,33 @@
     <ClInclude Include="PolygonSsbo.h">
       <Filter>Buffers</Filter>
     </ClInclude>
-    <ClInclude Include="ComputeParticleReset.h">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeParticleUpdate.h">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeQuadTreeParticleCollisions.h">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeQuadTreePopulate.h">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeQuadTreeReset.h">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClInclude>
     <ClInclude Include="ParticleQuadTree.h">
       <Filter>Particles</Filter>
     </ClInclude>
     <ClInclude Include="ParticleQuadTreeNode.h">
       <Filter>Particles</Filter>
     </ClInclude>
-    <ClInclude Include="ComputeQuadTreeGenerateGeometry.h">
-      <Filter>ComputeShaderLaunchers</Filter>
-    </ClInclude>
     <ClInclude Include="QuadTreeNodeSsbo.h">
       <Filter>Buffers</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="geometry.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="geometry.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="particleRender.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="particleRender.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="freeType.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="freeType.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="particlePolygonRegion.comp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="particleReset.comp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="particleUpdate.comp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="quadTreeReset.comp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="quadTreePopulate.comp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="quadTreeParticleCollisions.comp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="quadTreeGenerateGeometry.comp">
-      <Filter>Shaders</Filter>
-    </None>
+    <ClInclude Include="ComputeControllerGenerateQuadTreeGeometry.h">
+      <Filter>ComputeControllers</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeControllerParticleCollisions.h">
+      <Filter>ComputeControllers</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeControllerParticleReset.h">
+      <Filter>ComputeControllers</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeControllerParticleUpdate.h">
+      <Filter>ComputeControllers</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeControllerPopulateQuadTree.h">
+      <Filter>ComputeControllers</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeControllerResetQuadTree.h">
+      <Filter>ComputeControllers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Particles">
@@ -178,8 +137,46 @@
     <Filter Include="Buffers">
       <UniqueIdentifier>{a3e1fffa-b362-4527-9368-9305fcca5aec}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ComputeShaderLaunchers">
+    <Filter Include="ComputeControllers">
       <UniqueIdentifier>{e20e28db-53e8-45ba-bfd1-761ca3e677cd}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GenerateQuadTreeGeometry.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="ParticleCollisions.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="ParticleReset.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="ParticleUpdate.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="PopulateQuadTree.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="ResetQuadTree.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="FreeType.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Geometry.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="ParticleRender.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="FreeType.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Geometry.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="ParticleRender.vert">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-#include "ComputeQuadTreePopulate.h"
+#include "ComputeControllerPopulateQuadTree.h"
 
 #include "glload/include/glload/gl_4_4.h"
 #include "glm/gtc/type_ptr.hpp"
@@ -24,7 +24,7 @@ Parameters:
 Returns:    None
 Creator:    John Cox (1-21-2017)
 -----------------------------------------------------------------------------------------------*/
-ComputeQuadTreePopulate::ComputeQuadTreePopulate(
+ComputeControllerPopulateQuadTree::ComputeControllerPopulateQuadTree(
     unsigned int maxNodes,
     unsigned int maxParticles,
     float particleRegionRedius,
@@ -109,7 +109,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (1-21-2017)
 -----------------------------------------------------------------------------------------------*/
-ComputeQuadTreePopulate::~ComputeQuadTreePopulate()
+ComputeControllerPopulateQuadTree::~ComputeControllerPopulateQuadTree()
 {
     glDeleteBuffers(1, &_atomicCounterBufferId);
 }
@@ -123,7 +123,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (1-21-2017)
 -----------------------------------------------------------------------------------------------*/
-void ComputeQuadTreePopulate::PopulateTree()
+void ComputeControllerPopulateQuadTree::PopulateTree()
 {
     // reset atomic counters
     // Note: No program biding is required to bind and set the values of the atomic counters.
@@ -166,7 +166,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (1-21-2017)
 -----------------------------------------------------------------------------------------------*/
-unsigned int ComputeQuadTreePopulate::NumActiveNodes() const
+unsigned int ComputeControllerPopulateQuadTree::NumActiveNodes() const
 {
     return _activeNodes;
 }

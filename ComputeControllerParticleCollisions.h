@@ -10,10 +10,10 @@ Description:
 
 Creator:    John Cox (1-21-2017)
 -----------------------------------------------------------------------------------------------*/
-class ComputeParticleQuadTreeCollisions
+class ComputeControllerParticleCollisions
 {
 public:
-    ComputeParticleQuadTreeCollisions(unsigned int maxParticles, const std::string computeShaderKey);
+    ComputeControllerParticleCollisions(unsigned int maxParticles, const std::string computeShaderKey);
 
     // no destructor because there are no buffers that need to be destroyed
 

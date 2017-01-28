@@ -12,10 +12,10 @@ Description:
     Note: No OpenGL objects are generated that need to be destroyed, so there is no destructor.
 Creator:    John Cox (1-14-2017)
 -----------------------------------------------------------------------------------------------*/
-class ComputeQuadTreeReset
+class ComputeControllerResetQuadTree
 {
 public:
-    ComputeQuadTreeReset(unsigned int numStartingNodes, unsigned int maxNodes, 
+    ComputeControllerResetQuadTree(unsigned int numStartingNodes, unsigned int maxNodes, 
         const std::string &computeShaderKey);
 
     void ResetQuadTree();

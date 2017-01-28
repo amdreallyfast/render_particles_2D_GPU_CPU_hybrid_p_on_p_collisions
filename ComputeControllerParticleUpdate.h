@@ -18,12 +18,12 @@ Description:
     summoning the shader.  SSBO setup is performed in the appropriate SSBO object.
 Creator:    John Cox (11-24-2016)
 -----------------------------------------------------------------------------------------------*/
-class ComputeParticleUpdate
+class ComputeControllerParticleUpdate
 {
 public:
-    ComputeParticleUpdate(unsigned int numParticles, const glm::vec4 &particleRegionCenter, 
+    ComputeControllerParticleUpdate(unsigned int numParticles, const glm::vec4 &particleRegionCenter, 
         const float particleRegionRadius, const std::string &computeShaderKey);
-    ~ComputeParticleUpdate();
+    ~ComputeControllerParticleUpdate();
 
     void Update(const float deltaTimeSec);
     unsigned int NumActiveParticles() const;

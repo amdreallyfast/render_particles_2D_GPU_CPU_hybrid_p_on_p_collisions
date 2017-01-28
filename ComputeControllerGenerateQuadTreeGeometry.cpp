@@ -1,4 +1,4 @@
-#include "ComputeQuadTreeGenerateGeometry.h"
+#include "ComputeControllerGenerateQuadTreeGeometry.h"
 
 #include "glload/include/glload/gl_4_4.h"
 #include "ShaderStorage.h"
@@ -15,7 +15,7 @@ Parameters:
 Returns:    None
 Creator:    John Cox (1-16-2017)
 -----------------------------------------------------------------------------------------------*/
-ComputeQuadTreeGenerateGeometry::ComputeQuadTreeGenerateGeometry(unsigned int maxNodes, 
+ComputeControllerGenerateQuadTreeGeometry::ComputeControllerGenerateQuadTreeGeometry(unsigned int maxNodes, 
     unsigned int maxPolygonFaces, const std::string &computeShaderKey) :
     _computeProgramId(0),
     _totalNodes(0),
@@ -71,7 +71,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (1-16-2017)
 -----------------------------------------------------------------------------------------------*/
-ComputeQuadTreeGenerateGeometry::~ComputeQuadTreeGenerateGeometry()
+ComputeControllerGenerateQuadTreeGeometry::~ComputeControllerGenerateQuadTreeGeometry()
 {
     glDeleteBuffers(1, &_atomicCounterBufferId);
 }
@@ -85,7 +85,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (1-16-2017)
 -----------------------------------------------------------------------------------------------*/
-void ComputeQuadTreeGenerateGeometry::GenerateGeometry()
+void ComputeControllerGenerateQuadTreeGeometry::GenerateGeometry()
 {
     glUseProgram(_computeProgramId);
 
@@ -132,7 +132,7 @@ Returns:
     See Description.
 Creator:    John Cox (1-16-2017)
 -----------------------------------------------------------------------------------------------*/
-unsigned int ComputeQuadTreeGenerateGeometry::NumActiveFaces() const
+unsigned int ComputeControllerGenerateQuadTreeGeometry::NumActiveFaces() const
 {
     return _facesInUse;
 }

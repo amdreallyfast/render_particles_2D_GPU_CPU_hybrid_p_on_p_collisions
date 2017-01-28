@@ -32,10 +32,10 @@ Description:
 
 Creator:    John Cox (1-16-2017)
 -----------------------------------------------------------------------------------------------*/
-class ComputeQuadTreePopulate
+class ComputeControllerPopulateQuadTree
 {
 public:
-    ComputeQuadTreePopulate(
+    ComputeControllerPopulateQuadTree(
         unsigned int maxNodes, 
         unsigned int maxParticles, 
         float particleRegionRedius, 
@@ -44,7 +44,7 @@ public:
         unsigned int numRowsInTreeInitial, 
         unsigned int numNodesInTreeInitial, 
         const std::string computeShaderKey);
-    ~ComputeQuadTreePopulate();
+    ~ComputeControllerPopulateQuadTree();
 
     void PopulateTree();
     unsigned int NumActiveNodes() const;
@@ -60,7 +60,7 @@ private:
     unsigned int _atomicCounterBufferId;
     unsigned int _acOffsetParticleCounterPerNode;
 
-    // similar to the copy atomic counter in ComputeParticleUpdate for "active particle count", 
+    // similar to the copy atomic counter in ComputeControllerParticleUpdate for "active particle count", 
     // this is an atomic counter copy buffer for "active node count"
     unsigned int _acNodesInUseCopyBufferId;
 

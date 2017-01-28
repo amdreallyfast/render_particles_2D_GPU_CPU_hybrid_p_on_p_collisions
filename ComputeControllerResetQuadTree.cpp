@@ -1,4 +1,4 @@
-#include "ComputeQuadTreeReset.h"
+#include "ComputeControllerResetQuadTree.h"
 
 #include "glload/include/glload/gl_4_4.h"
 #include "ShaderStorage.h"
@@ -16,7 +16,7 @@ Parameters:
 Returns:    None
 Creator:    John Cox (1-16-2017)
 -----------------------------------------------------------------------------------------------*/
-ComputeQuadTreeReset::ComputeQuadTreeReset(unsigned int numStartingNodes, unsigned int maxNodes, 
+ComputeControllerResetQuadTree::ComputeControllerResetQuadTree(unsigned int numStartingNodes, unsigned int maxNodes, 
     const std::string &computeShaderKey)
 {
     _totalNodeCount = maxNodes;
@@ -43,7 +43,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (1-16-2017)
 -----------------------------------------------------------------------------------------------*/
-void ComputeQuadTreeReset::ResetQuadTree()
+void ComputeControllerResetQuadTree::ResetQuadTree()
 {
     GLuint numWorkGroupsX = (_totalNodeCount / 256) + 1;
     GLuint numWorkGroupsY = 1;

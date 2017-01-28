@@ -14,11 +14,11 @@ Description:
     - if the node is not one of the starting nodes, "in use" = 0
 Creator:    John Cox (1-16-2017)
 -----------------------------------------------------------------------------------------------*/
-class ComputeQuadTreeGenerateGeometry
+class ComputeControllerGenerateQuadTreeGeometry
 {
 public:
-    ComputeQuadTreeGenerateGeometry(unsigned int maxNodes, unsigned int maxPolygonFaces, const std::string &computeShaderKey);
-    ~ComputeQuadTreeGenerateGeometry();
+    ComputeControllerGenerateQuadTreeGeometry(unsigned int maxNodes, unsigned int maxPolygonFaces, const std::string &computeShaderKey);
+    ~ComputeControllerGenerateQuadTreeGeometry();
 
     void GenerateGeometry();
     unsigned int NumActiveFaces() const;

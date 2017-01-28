@@ -1,4 +1,4 @@
-#include "ComputeParticleUpdate.h"
+#include "ComputeControllerParticleUpdate.h"
 
 #include "ShaderStorage.h"
 #include "glload/include/glload/gl_4_4.h"
@@ -19,7 +19,7 @@ Parameters:
 Returns:    None
 Creator:    John Cox (11-24-2016)
 -----------------------------------------------------------------------------------------------*/
-ComputeParticleUpdate::ComputeParticleUpdate(unsigned int numParticles, 
+ComputeControllerParticleUpdate::ComputeControllerParticleUpdate(unsigned int numParticles, 
     const glm::vec4 &particleRegionCenter, const float particleRegionRadius, 
     const std::string &computeShaderKey) :
     _totalParticleCount(0),
@@ -90,7 +90,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (10-10-2016)    (created prior to this class in an earlier design)
 -----------------------------------------------------------------------------------------------*/
-ComputeParticleUpdate::~ComputeParticleUpdate()
+ComputeControllerParticleUpdate::~ComputeControllerParticleUpdate()
 {
     glDeleteBuffers(1, &_acParticleCounterBufferId);
     glDeleteBuffers(1, &_acParticleCounterCopyBufferId);
@@ -107,7 +107,7 @@ Returns:    None
 Creator:    John Cox (10-10-2016)
             (created in an earlier class, but later split into a dedicated class)
 -----------------------------------------------------------------------------------------------*/
-void ComputeParticleUpdate::Update(const float deltaTimeSec) 
+void ComputeControllerParticleUpdate::Update(const float deltaTimeSec) 
 {
     // spread out the particles between lots of work items, but keep it 1-dimensional for easy 
     // navigation through a 1-dimensional particle buffer
@@ -153,7 +153,7 @@ Parameters: None
 Returns:    None
 Creator:    John Cox (1-7-2017)
 -----------------------------------------------------------------------------------------------*/
-unsigned int ComputeParticleUpdate::NumActiveParticles() const
+unsigned int ComputeControllerParticleUpdate::NumActiveParticles() const
 {
     return _activeParticleCount;
 }
