@@ -194,30 +194,22 @@ void ParticleCollisionsWithinNode(uint particleIndex, uint nodeIndex)
             continue;
         }
 
-//        AllParticles[particleIndex]._collisionCountThisFrame += 1;
-
         ParticleCollisionP1WithP2(particleIndex, otherParticleIndex);
     }
-
-//    //if (node._numCurrentParticles == -1)
-//    if (node._numCurrentParticles < 25)
-//    {
-//        AllParticles[particleIndex]._collisionCountThisFrame = 15;
-//    }
-//    //else if (node._numCurrentParticles > 100)
-//    else if (node._numCurrentParticles < 50)
-//    {
-//        AllParticles[particleIndex]._collisionCountThisFrame = 30;
-//    }
-//    else
-//    {
-//        AllParticles[particleIndex]._collisionCountThisFrame = 5;
-//    }
 }
 
 
-// TODO: header
-// The particle is assumed to be in the node represented by startingNodeIndex.  If it isn't, for shame!
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Starting with the provided node, ddives down through subdivisions to find the deepest leaf 
+    that the particle occupies.
+Parameters: 
+    particleIndex       Find where this particle is living.
+    startingNodeIndex   Start looking into the AllNodes[] buffer here
+Returns:    
+    See description.
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
 uint FindLeafNode(uint particleIndex, uint startingNodeIndex)
 {
     vec4 particlePosition = AllParticles[particleIndex]._pos;
@@ -225,7 +217,9 @@ uint FindLeafNode(uint particleIndex, uint startingNodeIndex)
     while(AllNodes[nodeIndex]._isSubdivided == 1)
     {
         // drill down to the next subdivision
-        // Note: It was already determined that the particle was in the starting node, so no bounds checking is required.  I just have to figure out where it is compared to the center (the nexus of the child nodes).
+        // Note: It was already determined that the particle was in the starting node, so no 
+        // bounds checking is required.  I just have to figure out where it is compared to the 
+        // center (the nexus of the child nodes).
 
         ParticleQuadTreeNode node = AllNodes[nodeIndex];
 
@@ -266,8 +260,18 @@ uint FindLeafNode(uint particleIndex, uint startingNodeIndex)
     return nodeIndex;
 }
 
-// TODO: header
-// cleans up the initial "who contains this particle?" check in main(...)
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Determines of the particle's position is in a given node.  This is used during 
+    initialization to determine which of the starting nodes the prticle occupies.  Cleans up the 
+    initial "who contains this particle?" check in main(...).  
+Parameters: 
+    particleIndex   Find where this particle is living.
+    nodeIndex       Self-explanatory.
+Returns:    
+    True if the particle's position occupies this node, otherwise false.
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
 bool ParticleOccupiesNode(uint particleIndex, uint nodeIndex)
 {
     vec4 pPos = AllParticles[particleIndex]._pos;
@@ -277,7 +281,17 @@ bool ParticleOccupiesNode(uint particleIndex, uint nodeIndex)
     return horizontalCheck && verticalCheck;
 }
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Governs the detection of particle-particle collisions with neighboring nodes to the 
+    particle's starting node.
+Parameters: 
+    particleIndex   Find where this particle is living.
+    nodeIndex       Self-explanatory.
+Returns:    
+    True if the particle's position occupies this node, otherwise false.
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
 void ParticleCollisionsWithNeighbors(uint particleIndex, uint nodeIndex)
 {
     // check against all 8 neighbors
@@ -368,9 +382,6 @@ void main()
         return;
     }
 
-//    AllParticles[particleIndex]._collisionCountThisFrame = 3;
-//    AllParticles[particleIndex]._indexOfNodeThatItIsOccupying = 13;
-
     Particle p = AllParticles[particleIndex];
     if (p._isActive == 0)
     {
@@ -378,31 +389,57 @@ void main()
     }
 
     // drill down from the first four nodes (initial subdivision)
+    // Note: The following calculations replace a series of if-then-else statements for 
+    // determining the starting node index.
+    // Also Note: See enum FIRST_FOUR_NODE_INDEXES in ParticleQuadTree for the indices of the 
+    // first four nodes.  These are manual reproductions of it.
+    uint isLeft = (p._pos.x < uParticleRegionCenter.x) ? 1 : 0;
+    uint isTop = (p._pos.y > uParticleRegionCenter.y) ? 1 : 0;
+    uint isTopLeftIndex = 0 * (isLeft * isTop);
+    uint isTopRightIndex = 1 * ((1 - isLeft) * isTop);
+    uint isBottomLeftIndex = 2 * (isLeft * (1 - isTop));
+    uint isBottomRightIndex = 3 * ((1 - isLeft) * (1 - isTop));
 
-    // TODO: try replacing conditions with index calculation via ternary operator
-    uint startingNodeIndex = -1;
-    if (ParticleOccupiesNode(particleIndex, 0))
+    // only one of the first four indices will be non-zero
+    uint startingNodeIndex = 
+        isTopLeftIndex +
+        isTopRightIndex + 
+        isBottomLeftIndex + 
+        isBottomRightIndex;
+
+    if (startingNodeIndex > 65536)
     {
-        startingNodeIndex = 0;
+        AllParticles[particleIndex]._netForceThisFrame.y = -0.2f;
     }
-    else if (ParticleOccupiesNode(particleIndex, 1))
-    {
-        startingNodeIndex = 1;
-    }
-    else if (ParticleOccupiesNode(particleIndex, 2))
-    {
-        startingNodeIndex = 2;
-    }
-    else if (ParticleOccupiesNode(particleIndex, 3))
-    {
-        startingNodeIndex = 3;
-    }
-    else
-    {
-        // the particle is not within the first subdivision; something has gone terribly wrong
-    }
+
+
+//    uint startingNodeIndex =-1;
+//    if (ParticleOccupiesNode(particleIndex, 0))
+//    {
+//        startingNodeIndex = 0;
+//    }
+//    else if (ParticleOccupiesNode(particleIndex, 1))
+//    {
+//        startingNodeIndex = 1;
+//    }
+//    else if (ParticleOccupiesNode(particleIndex, 2))
+//    {
+//        startingNodeIndex = 2;
+//    }
+//    else if (ParticleOccupiesNode(particleIndex, 3))
+//    {
+//        startingNodeIndex = 3;
+//    }
+//    else
+//    {
+//        // the particle is not within the first subdivision; something has gone terribly wrong
+//    }
 
     uint leafNodeIndex = FindLeafNode(particleIndex, startingNodeIndex);
+//    if (leafNodeIndex > 0)
+//    {
+//        AllParticles[particleIndex]._netForceThisFrame.x = -0.005f;
+//    }
     ParticleCollisionsWithinNode(particleIndex, leafNodeIndex);
     ParticleCollisionsWithNeighbors(particleIndex, leafNodeIndex);
 

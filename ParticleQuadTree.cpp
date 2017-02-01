@@ -14,6 +14,7 @@ Exception:  Safe
 Creator:    John Cox (12-17-2016)
 -----------------------------------------------------------------------------------------------*/
 ParticleQuadTree::ParticleQuadTree(const glm::vec4 &particleRegionCenter, float particleRegionRadius) :
+    _completedNodePopulations(0),
     _particleRegionCenter(particleRegionCenter),
     _particleRegionRadius(particleRegionRadius)
 {
@@ -98,83 +99,70 @@ ParticleQuadTree::ParticleQuadTree(const glm::vec4 &particleRegionCenter, float 
     _numActiveNodes = FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES;
 }
 
-// TODO: header
-// Note: I tried doing this reset by manually resetting the first 4 and then doing a memset(...) on the rest, but I didn't see any effect on framerate, so I'm using the smaller and cleaner code, which is a loop.
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Runs through the node array and resets every single node except those in the initial 
+    subdivision.
 
+    Note: Rather than have a loop that runs through every single node and resets them one by 
+    one, this method makes use spelling out the first four nodes' resets manually, and then a 
+    memset(...) for the rest.
+Parameters: None
+Returns:    None
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
 void ParticleQuadTree::ResetTree()
 {
     _numActiveNodes = FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES;
 
-    //// top left
-    //{
-    //    ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::TOP_LEFT];
-    //    node._numCurrentParticles = 0;
-    //    node._isSubdivided = 0;
-    //    node._childNodeIndexTopLeft = -1;
-    //    node._childNodeIndexTopRight = -1;
-    //    node._childNodeIndexBottomLeft = -1;
-    //    node._childNodeIndexBottomRight = -1;
-    //}
-
-    //// top right
-    //{
-    //    ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::TOP_RIGHT];
-    //    node._numCurrentParticles = 0;
-    //    node._isSubdivided = 0;
-    //    node._childNodeIndexTopLeft = -1;
-    //    node._childNodeIndexTopRight = -1;
-    //    node._childNodeIndexBottomLeft = -1;
-    //    node._childNodeIndexBottomRight = -1;
-    //}
-
-    //// bottom left
-    //{
-    //    ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::BOTTOM_LEFT];
-    //    node._numCurrentParticles = 0;
-    //    node._isSubdivided = 0;
-    //    node._childNodeIndexTopLeft = -1;
-    //    node._childNodeIndexTopRight = -1;
-    //    node._childNodeIndexBottomLeft = -1;
-    //    node._childNodeIndexBottomRight = -1;
-    //}
-
-    //// bottom right
-    //{
-    //    ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::BOTTOM_RIGHT];
-    //    node._numCurrentParticles = 0;
-    //    node._isSubdivided = 0;
-    //    node._childNodeIndexTopLeft = -1;
-    //    node._childNodeIndexTopRight = -1;
-    //    node._childNodeIndexBottomLeft = -1;
-    //    node._childNodeIndexBottomRight = -1;
-    //}
-
-    //// wipe out the rest of the nodes
-    //ParticleQuadTreeNode *startHere = &_allNodes[FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES];
-    //size_t numBytes = sizeof(ParticleQuadTreeNode) * (MAX_NODES - FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES);
-    //memset(startHere, 0, numBytes);
-
-
-    for (int nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++)
+    // top left
     {
-        ParticleQuadTreeNode &node = _allNodes[nodeIndex];
-
+        ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::TOP_LEFT];
         node._numCurrentParticles = 0;
         node._isSubdivided = 0;
         node._childNodeIndexTopLeft = -1;
         node._childNodeIndexTopRight = -1;
         node._childNodeIndexBottomLeft = -1;
         node._childNodeIndexBottomRight = -1;
-
-        // all excess nodes are turned off
-        if (nodeIndex >= FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES)
-        {
-            node._inUse = 0;
-        }
     }
 
-    printf("");
-    // TODO: try a memset to 0 from _allNodes[FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES] to _allNodes[MAX_NODES - 1]
+    // top right
+    {
+        ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::TOP_RIGHT];
+        node._numCurrentParticles = 0;
+        node._isSubdivided = 0;
+        node._childNodeIndexTopLeft = -1;
+        node._childNodeIndexTopRight = -1;
+        node._childNodeIndexBottomLeft = -1;
+        node._childNodeIndexBottomRight = -1;
+    }
+
+    // bottom left
+    {
+        ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::BOTTOM_LEFT];
+        node._numCurrentParticles = 0;
+        node._isSubdivided = 0;
+        node._childNodeIndexTopLeft = -1;
+        node._childNodeIndexTopRight = -1;
+        node._childNodeIndexBottomLeft = -1;
+        node._childNodeIndexBottomRight = -1;
+    }
+
+    // bottom right
+    {
+        ParticleQuadTreeNode &node = _allNodes[FIRST_FOUR_NODE_INDEXES::BOTTOM_RIGHT];
+        node._numCurrentParticles = 0;
+        node._isSubdivided = 0;
+        node._childNodeIndexTopLeft = -1;
+        node._childNodeIndexTopRight = -1;
+        node._childNodeIndexBottomLeft = -1;
+        node._childNodeIndexBottomRight = -1;
+    }
+
+    // wipe out the rest of the nodes
+    ParticleQuadTreeNode *startHere = &_allNodes[FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES];
+    size_t numBytes = sizeof(ParticleQuadTreeNode) * (MAX_NODES - FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES);
+    memset(startHere, 0, numBytes);
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -235,52 +223,87 @@ void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numP
             }
         }
 
-        AddParticleToNode(particleIndex, nodeIndex, _localParticleArray);
+        AddParticleToNode(particleIndex, nodeIndex);
     }
 
     _completedNodePopulations++;
 
 }
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Returns a pointer to the most-recently completed quad tree buffer.  This is used when 
+    uploading the the results back to the GPU.
+Parameters: None
+Returns:    
+    A pointer to said buffer.
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
 const ParticleQuadTreeNode *ParticleQuadTree::CurrentBuffer() const
 {
     return _allNodes;
 }
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Returns the number of nodes that were in the use during the most-recently completed quad 
+    tree.  This is used when uploading the the results back to the GPU.
+Parameters: None
+Returns:    
+    A pointer to said buffer.
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
 unsigned int ParticleQuadTree::NumActiveNodes() const
 {
     return _numActiveNodes;
 }
 
-// TODO: header
-unsigned int ParticleQuadTree::SizeOfAllNodesBytes() const
-{
-    return MAX_NODES * sizeof(ParticleQuadTreeNode);
-}
-
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Returns the number of quad trees that have been completed since the last call to 
+    ResetNumNodePopulations().  Helpful for calculating the rate that the quad tree is 
+    generated.
+Parameters: None
+Returns:    
+    See description.
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
 int ParticleQuadTree::NumNodePopulations() const
 {
     return _completedNodePopulations;
 }
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Resets the count for how many times the quad tree has been generated.  
+Parameters: None
+Returns:    None
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
 void ParticleQuadTree::ResetNumNodePopulations()
 {
     _completedNodePopulations = 0;
 }
 
-// TODO: header
-bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex, Particle *particleCollection)
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Adds a single particle to a single node.  The particle collection has to come along for the 
+    ride because of the risk of particle addition causing the node to subdivide.
+Parameters: 
+    particleIndex   Self-explanatory.
+    nodeIndex       Self-explanatory
+Returns:    
+    A pointer to said buffer.
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
+bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex)
 {
     // don't bother checking the pointer; if a null pointer was passed, just crash
     ParticleQuadTreeNode &node = _allNodes[nodeIndex];
 
     if (node._numCurrentParticles == ParticleQuadTreeNode::MAX_PARTICLES_PER_NODE)
     {
-        if (!SubdivideNode(nodeIndex, particleCollection))
+        if (!SubdivideNode(nodeIndex))
         {
             // subdivision failed (ran out of nodes) and cannot add particle
             return false;
@@ -295,7 +318,7 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex, Parti
         float nodeCenterY = (node._bottomEdge + node._topEdge) * 0.5f;
 
         int childNodeIndex = 0;
-        Particle &p = particleCollection[particleIndex];
+        Particle &p = _localParticleArray[particleIndex];
 
         // TODO: try replacing conditions with index calculation via ternary operator
         if (p._position.y < nodeCenterY)
@@ -328,7 +351,7 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex, Parti
         }
 
         // go deeper
-        return AddParticleToNode(particleIndex, childNodeIndex, particleCollection);
+        return AddParticleToNode(particleIndex, childNodeIndex);
     }
     else
     {
@@ -339,8 +362,19 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex, Parti
     }
 }
 
-// TODO: header
-bool ParticleQuadTree::SubdivideNode(int nodeIndex, Particle *particleCollection)
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Acquires four new nodes and sets them as children to the provided node.  Sets their 
+    dimensions and neighbors based on the parent.  Then takes the node's particles and divides 
+    them amongst the child nodes.
+Parameters: 
+    nodeIndex       Self-explanatory
+Returns:    
+    True if the subdivision was successful, false if there weren't enough nodes for the 
+    subdivision.
+Creator:    John Cox (1-28-2016)
+-----------------------------------------------------------------------------------------------*/
+bool ParticleQuadTree::SubdivideNode(int nodeIndex)
 {
     // don't bother checking the pointer; if a null pointer was passed, just crash
 
@@ -433,7 +467,7 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex, Particle *particleCollection
     for (int particleCount = 0; particleCount < node._numCurrentParticles; particleCount++)
     {
         int particleIndex = node._indicesForContainedParticles[particleCount];
-        Particle &p = particleCollection[particleIndex];
+        Particle &p = _localParticleArray[particleIndex];
 
         // the node is subdivided, so add the particle to the child nodes
         int childNodeIndex = -1;

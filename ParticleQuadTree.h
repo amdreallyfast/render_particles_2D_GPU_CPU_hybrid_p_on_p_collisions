@@ -31,7 +31,6 @@ public:
     const ParticleQuadTreeNode *CurrentBuffer() const;
 
     unsigned int NumActiveNodes() const;
-    unsigned int SizeOfAllNodesBytes() const;
     int NumNodePopulations() const;
     void ResetNumNodePopulations();
 
@@ -39,8 +38,8 @@ public:
     static const int MAX_NODES = 256 * 256;
 
 private:
-    bool AddParticleToNode(int particleIndex, int nodeIndex, Particle *particleCollection);
-    bool SubdivideNode(int nodeIndex, Particle *particleCollection);
+    bool AddParticleToNode(int particleIndex, int nodeIndex);
+    bool SubdivideNode(int nodeIndex);
 
     enum FIRST_FOUR_NODE_INDEXES
     {
