@@ -393,12 +393,46 @@ void main()
     // determining the starting node index.
     // Also Note: See enum FIRST_FOUR_NODE_INDEXES in ParticleQuadTree for the indices of the 
     // first four nodes.  These are manual reproductions of it.
-    uint isLeft = (p._pos.x < uParticleRegionCenter.x) ? 1 : 0;
-    uint isTop = (p._pos.y > uParticleRegionCenter.y) ? 1 : 0;
-    uint isTopLeftIndex = 0 * (isLeft * isTop);
-    uint isTopRightIndex = 1 * ((1 - isLeft) * isTop);
-    uint isBottomLeftIndex = 2 * (isLeft * (1 - isTop));
-    uint isBottomRightIndex = 3 * ((1 - isLeft) * (1 - isTop));
+    // Also Also Note: Thanks to a co-worker of mine for this algorithm.
+    
+    // this algorithm relies on the sign change + -> - across the axis and vice versa, so the 
+    // first step is to account for non-origin particle region center.
+    float particleXCentered = p._pos.x - uParticleRegionCenter.x;
+    float particleYCentered = p._pos.y - uParticleRegionCenter.y;
+
+    // convert the particle axis' positions to -1.0f/+1.0f
+    float particleXUnity = abs(particleXCentered) / particleXCentered;
+    float particleYUnity = abs(particleYCentered) / particleYCentered;
+
+    // +-1.0f + 0.5f => -0.5f/+1.5f
+    particleXUnity += 0.5f;
+    particleYUnity += 0.5f;
+
+    // the absolute value is +0.5/+1.5f
+    particleXUnity = abs(particleXUnity);
+    particleYUnity = abs(particleYUnity);
+
+    // jam the values into an integer to get 0/1
+    // Note: If the particle X is left of 0, then the previous calculations will result in particleXUnity = +0.5.  Putting that into an integer will result in a 0.  I am trying to recreate a boolean value, so if particleXUnity is integer-ified, then it will be 0 and therefore false.  So a particle X is left of 0, then it will simplified to integer 0 ("false"), which means "is right".  Similarly, a particle Y below zero will be simplified to integer 0 (false), which means "is top".
+    uint isRight = int(particleXUnity);
+    uint isTop = int(particleYUnity);
+
+    // use the integer values as true/false substitutes
+    // Note: The result of these multiplications is that every entry is 0 or non-0 except for the top left, which is already index 0.  These values are summed together later, so the only way to get the top left node's index is for all others to be 0.  This is ok.
+    uint isTopLeftIndex = 0 * ((1 - isRight) * isTop);
+    uint isTopRightIndex = 1 * (isRight * isTop);
+    uint isBottomLeftIndex = 2 * ((1 - isRight) * (1 - isTop));
+    uint isBottomRightIndex = 3 * (isRight * (1 - isTop));
+
+
+
+
+//    uint isLeft = (p._pos.x < uParticleRegionCenter.x) ? 1 : 0;
+//    uint isTop = (p._pos.y > uParticleRegionCenter.y) ? 1 : 0;
+//    uint isTopLeftIndex = 0 * (isLeft * isTop);
+//    uint isTopRightIndex = 1 * ((1 - isLeft) * isTop);
+//    uint isBottomLeftIndex = 2 * (isLeft * (1 - isTop));
+//    uint isBottomRightIndex = 3 * ((1 - isLeft) * (1 - isTop));
 
     // only one of the first four indices will be non-zero
     uint startingNodeIndex = 
@@ -407,10 +441,10 @@ void main()
         isBottomLeftIndex + 
         isBottomRightIndex;
 
-    if (startingNodeIndex > 65536)
-    {
-        AllParticles[particleIndex]._netForceThisFrame.y = -0.2f;
-    }
+//    if (startingNodeIndex == 3)
+//    {
+//        AllParticles[particleIndex]._netForceThisFrame.y = -0.2f;
+//    }
 
 
 //    uint startingNodeIndex =-1;
@@ -436,12 +470,16 @@ void main()
 //    }
 
     uint leafNodeIndex = FindLeafNode(particleIndex, startingNodeIndex);
-//    if (leafNodeIndex > 0)
+
+//    float f = 0.8f;
+//    int i = int(f);
+//    if (i == 1)
 //    {
-//        AllParticles[particleIndex]._netForceThisFrame.x = -0.005f;
+//        AllParticles[particleIndex]._netForceThisFrame.x = -0.01f;
 //    }
+
     ParticleCollisionsWithinNode(particleIndex, leafNodeIndex);
-    ParticleCollisionsWithNeighbors(particleIndex, leafNodeIndex);
+//    ParticleCollisionsWithNeighbors(particleIndex, leafNodeIndex);
 
 
 
