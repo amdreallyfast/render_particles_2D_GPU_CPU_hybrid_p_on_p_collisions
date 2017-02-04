@@ -420,6 +420,10 @@ void UpdateAllTheThings()
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, gpQuadTreeBuffer->BufferSizeBytes(), gpQuadTree->QuadTreeBuffer());
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gpParticleBuffer->BufferId());
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, gpParticleBuffer->BufferSizeBytes(), gpQuadTree->ParticleBuffer());
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
 
 
 
