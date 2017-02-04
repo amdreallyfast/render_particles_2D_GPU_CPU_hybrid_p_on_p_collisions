@@ -15,10 +15,11 @@ Parameters:
 Returns:    None
 Creator:    John Cox (1-21-2017)
 -----------------------------------------------------------------------------------------------*/
-ComputeControllerParticleCollisions::ComputeControllerParticleCollisions(unsigned int maxParticles, const glm::vec4 &particleRegionCenter, const std::string computeShaderKey) :
+ComputeControllerParticleCollisions::ComputeControllerParticleCollisions(unsigned int maxParticles, unsigned int maxNodes, const glm::vec4 &particleRegionCenter, const std::string computeShaderKey) :
     _computeProgramId(0),
     _totalParticles(0),
     _unifLocMaxParticles(-1),
+    _unifLocMaxNodes(-1),
     _unifLocInverseDeltaTimeSec(-1),
     _unifLoctParticleRegionCenter(-1)
 {
@@ -27,6 +28,7 @@ ComputeControllerParticleCollisions::ComputeControllerParticleCollisions(unsigne
     ShaderStorage &shaderStorageRef = ShaderStorage::GetInstance();
 
     _unifLocMaxParticles = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxParticles");
+    _unifLocMaxNodes = shaderStorageRef.GetUniformLocation(computeShaderKey, "uMaxNodes");
     _unifLocInverseDeltaTimeSec = shaderStorageRef.GetUniformLocation(computeShaderKey, "uInverseDeltaTimeSec");
     _unifLoctParticleRegionCenter = shaderStorageRef.GetUniformLocation(computeShaderKey, "uParticleRegionCenter");
     
@@ -37,6 +39,7 @@ ComputeControllerParticleCollisions::ComputeControllerParticleCollisions(unsigne
 
     // uniform initialization
     glUniform1ui(_unifLocMaxParticles, maxParticles);
+    glUniform1ui(_unifLocMaxNodes, maxNodes);
     glUniform4fv(_unifLoctParticleRegionCenter, 1, glm::value_ptr(particleRegionCenter));
 
     // the "inverse delta time" uniform will be uploaded in Update(...)

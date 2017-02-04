@@ -326,7 +326,7 @@ void Init()
 
     //gpQuadTreePopulater = new ComputeControllerPopulateQuadTree(ParticleQuadTree::MAX_NODES, MAX_PARTICLES, particleRegionRadius, particleRegionCenter, ParticleQuadTree::_NUM_COLUMNS_IN_TREE_INITIAL, ParticleQuadTree::_NUM_ROWS_IN_TREE_INITIAL, ParticleQuadTree::_NUM_STARTING_NODES, ComputeControllerPopulateQuadTreeKey);
 
-    gpQuadTreeParticleCollider = new ComputeControllerParticleCollisions(Particle::MAX_PARTICLES, particleRegionCenter, computeQuadTreeParticleColliderKey);
+    gpQuadTreeParticleCollider = new ComputeControllerParticleCollisions(Particle::MAX_PARTICLES, ParticleQuadTree::MAX_NODES, particleRegionCenter, computeQuadTreeParticleColliderKey);
 
     // the timer will be used for framerate calculations
     gTimer.Init();

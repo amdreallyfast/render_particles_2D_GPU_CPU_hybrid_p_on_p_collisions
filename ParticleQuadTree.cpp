@@ -190,40 +190,24 @@ void ParticleQuadTree::AddParticlestoTree(Particle *particleCollection, int numP
             continue;
         }
 
-        // TODO: try replacing with index calculation and trinary operators
+        // attempting conditional elimination to improve performance
+        // Note: it didn't seem to gain me any frames over nested 
+        // if (left of center) { if (higher than middle) { ... conditions.  It is less code 
+        // though.
+        int isLeft = int(p._position.x < _particleRegionCenter.x);
+        int isRight = 1 - isLeft;
+        int isTop = int(p._position.y > _particleRegionCenter.y);
+        int isBottom = 1 - isTop;
 
-        // if the particle is outside the particle region, then it would be inactive
-        int nodeIndex = -1;
-        if (p._position.y < _particleRegionCenter.y)
-        {
-            // bottom
-            if (p._position.x < _particleRegionCenter.x)
-            {
-                // left
-                nodeIndex = FIRST_FOUR_NODE_INDEXES::BOTTOM_LEFT;
-            }
-            else
-            {
-                // right
-                nodeIndex = FIRST_FOUR_NODE_INDEXES::BOTTOM_RIGHT;
-            }
-        }
-        else
-        {
-            // top
-            if (p._position.x < _particleRegionCenter.x)
-            {
-                // left
-                nodeIndex = FIRST_FOUR_NODE_INDEXES::TOP_LEFT;
-            }
-            else
-            {
-                // right
-                nodeIndex = FIRST_FOUR_NODE_INDEXES::TOP_RIGHT;
-            }
-        }
+        int isTopLeftIndex = FIRST_FOUR_NODE_INDEXES::TOP_LEFT * (isLeft * isTop);
+        int isTopRightIndex = FIRST_FOUR_NODE_INDEXES::TOP_RIGHT * (isRight * isTop);
+        int isBottomLeftIndex = FIRST_FOUR_NODE_INDEXES::BOTTOM_LEFT * (isLeft * isBottom);
+        int isBottomRightIndex = FIRST_FOUR_NODE_INDEXES::BOTTOM_RIGHT * (isRight * isBottom);
 
-        AddParticleToNode(particleIndex, nodeIndex);
+        // only one of the first four indices will be non-zero
+        int childNodeIndex = isTopLeftIndex + isTopRightIndex + isBottomLeftIndex + isBottomRightIndex;
+
+        AddParticleToNode(particleIndex, childNodeIndex);
     }
 
     _completedNodePopulations++;
@@ -316,6 +300,7 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex)
 {
     // don't bother checking the pointer; if a null pointer was passed, just crash
     ParticleQuadTreeNode &node = _allNodes[nodeIndex];
+    Particle &p = _localParticleArray[particleIndex];
 
     if (node._numCurrentParticles == ParticleQuadTreeNode::MAX_PARTICLES_PER_NODE)
     {
@@ -333,51 +318,30 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex)
         float nodeCenterX = (node._leftEdge + node._rightEdge) * 0.5f;
         float nodeCenterY = (node._bottomEdge + node._topEdge) * 0.5f;
 
-        int childNodeIndex = 0;
-        Particle &p = _localParticleArray[particleIndex];
+        // attempting conditional elimination to improve performance
+        // Note: it didn't seem to gain me any frames over nested 
+        // if (left of center) { if (higher than middle) { ... conditions.  It is less code though.
+        int isLeft = int(p._position.x < nodeCenterX);
+        int isRight = 1 - isLeft;
+        int isTop = int(p._position.y > nodeCenterY);
+        int isBottom = 1 - isTop;
 
-        if (isnan(p._position.y))
-        {
-            printf("");
-        }
+        int isTopLeftIndex = node._childNodeIndexTopLeft * (isLeft * isTop);
+        int isTopRightIndex = node._childNodeIndexTopRight * (isRight * isTop);
+        int isBottomLeftIndex = node._childNodeIndexBottomLeft * (isLeft * isBottom);
+        int isBottomRightIndex = node._childNodeIndexBottomRight * (isRight * isBottom);
 
-        // TODO: try replacing conditions with index calculation via ternary operator
-        if (p._position.y < nodeCenterY)
-        {
-            // bottom
-            if (p._position.x < nodeCenterX)
-            {
-                // left
-                childNodeIndex = node._childNodeIndexBottomLeft;
-            }
-            else
-            {
-                // right
-                childNodeIndex = node._childNodeIndexBottomRight;
-            }
-        }
-        else
-        {
-            // top
-            if (p._position.x < nodeCenterX)
-            {
-                // left
-                childNodeIndex = node._childNodeIndexTopLeft;
-            }
-            else
-            {
-                // right
-                childNodeIndex = node._childNodeIndexTopRight;
-            }
-        }
+        // only one of the first four indices will be non-zero
+        int childNodeIndex = isTopLeftIndex + isTopRightIndex + isBottomLeftIndex + isBottomRightIndex;
 
         // go deeper
         return AddParticleToNode(particleIndex, childNodeIndex);
     }
     else
     {
-        // not subdivided, so add the particle to the collection
+        // not subdivided, so add the particle to this node
         node._indicesForContainedParticles[node._numCurrentParticles++] = particleIndex;
+        _localParticleArray[particleIndex]._indexOfNodeThatItIsOccupying = nodeIndex;
 
         return true;
     }
@@ -454,21 +418,6 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex)
     childTopRight._rightEdge = node._rightEdge;
     childTopRight._bottomEdge = nodeCenterY;
 
-    ParticleQuadTreeNode &childBottomRight = _allNodes[childNodeIndexBottomRight];
-    childBottomRight._inUse = 1;
-    childBottomRight._neighborIndexLeft = childNodeIndexBottomLeft;
-    childBottomRight._neighborIndexTopLeft = childNodeIndexTopLeft;
-    childBottomRight._neighborIndexTop = childNodeIndexTopRight;
-    childBottomRight._neighborIndexTopRight = node._neighborIndexRight;
-    childBottomRight._neighborIndexRight = node._neighborIndexRight;
-    childBottomRight._neighborIndexBottomRight = node._neighborIndexBottomRight;
-    childBottomRight._neighborIndexBottom = node._neighborIndexBottom;
-    childBottomRight._neighborIndexBottomLeft = node._neighborIndexBottom;
-    childBottomRight._leftEdge = nodeCenterX;
-    childBottomRight._topEdge = nodeCenterY;
-    childBottomRight._rightEdge = node._rightEdge;
-    childBottomRight._bottomEdge = node._bottomEdge;
-
     ParticleQuadTreeNode &childBottomLeft = _allNodes[childNodeIndexBottomLeft];
     childBottomLeft._inUse = 1;
     childBottomLeft._neighborIndexLeft = node._neighborIndexLeft;
@@ -484,47 +433,45 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex)
     childBottomLeft._rightEdge = nodeCenterX;
     childBottomLeft._bottomEdge = node._bottomEdge;
 
+    ParticleQuadTreeNode &childBottomRight = _allNodes[childNodeIndexBottomRight];
+    childBottomRight._inUse = 1;
+    childBottomRight._neighborIndexLeft = childNodeIndexBottomLeft;
+    childBottomRight._neighborIndexTopLeft = childNodeIndexTopLeft;
+    childBottomRight._neighborIndexTop = childNodeIndexTopRight;
+    childBottomRight._neighborIndexTopRight = node._neighborIndexRight;
+    childBottomRight._neighborIndexRight = node._neighborIndexRight;
+    childBottomRight._neighborIndexBottomRight = node._neighborIndexBottomRight;
+    childBottomRight._neighborIndexBottom = node._neighborIndexBottom;
+    childBottomRight._neighborIndexBottomLeft = node._neighborIndexBottom;
+    childBottomRight._leftEdge = nodeCenterX;
+    childBottomRight._topEdge = nodeCenterY;
+    childBottomRight._rightEdge = node._rightEdge;
+    childBottomRight._bottomEdge = node._bottomEdge;
+
     // redistribute the particles amongst the children
     for (int particleCount = 0; particleCount < node._numCurrentParticles; particleCount++)
     {
         int particleIndex = node._indicesForContainedParticles[particleCount];
+        //int childNodeIndex = WhichNodeIsOccupied(particleIndex, nodeCenter, childNodeIndexTopLeft, childNodeIndexTopRight, childNodeIndexBottomLeft, childNodeIndexBottomRight);
+
+        // attempting conditional elimination to improve performance, but it doesn't seem to be getting anything  better than nest if (left of center) { if (higher than center) { ... conditions.  It's less code though.
         Particle &p = _localParticleArray[particleIndex];
+        int isLeft = int(p._position.x < nodeCenterX);
+        int isRight = 1 - isLeft;
+        int isTop = int(p._position.y > nodeCenterY);
+        int isBottom = 1 - isTop;
 
-        // the node is subdivided, so add the particle to the child nodes
-        int childNodeIndex = -1;
+        int isTopLeftIndex = childNodeIndexTopLeft * (isLeft * isTop);
+        int isTopRightIndex = childNodeIndexTopRight * (isRight * isTop);
+        int isBottomLeftIndex = childNodeIndexBottomLeft * (isLeft * isBottom);
+        int isBottomRightIndex = childNodeIndexBottomRight * (isRight * isBottom);
 
-        // TODO: replace conditions with ternary operators to calculate indices (an inline private helper function would work)
-        if (p._position.y < nodeCenterY)
-        {
-            // bottom
-            if (p._position.x < nodeCenterX)
-            {
-                // left
-                childNodeIndex = node._childNodeIndexBottomLeft;
-            }
-            else
-            {
-                // right
-                childNodeIndex = node._childNodeIndexBottomRight;
-            }
-        }
-        else
-        {
-            // top
-            if (p._position.x < nodeCenterX)
-            {
-                // left
-                childNodeIndex = node._childNodeIndexTopLeft;
-            }
-            else
-            {
-                // right
-                childNodeIndex = node._childNodeIndexTopRight;
-            }
-        }
+        // only one of these will be non-zero
+        int childNodeIndex = isTopLeftIndex + isTopRightIndex + isBottomLeftIndex + isBottomRightIndex;
 
         ParticleQuadTreeNode &childNode = _allNodes[childNodeIndex];
         childNode._indicesForContainedParticles[childNode._numCurrentParticles++] = particleIndex;
+        p._indexOfNodeThatItIsOccupying = childNodeIndex;
 
         // not actually necessary because the array will be run over on the next update, but I 
         // still like to clean up after myself in case of debugging
@@ -534,5 +481,3 @@ bool ParticleQuadTree::SubdivideNode(int nodeIndex)
     // reset the subdivided node's particle count so that it doesn't try to subdivide again
     node._numCurrentParticles = 0;
 }
-
-

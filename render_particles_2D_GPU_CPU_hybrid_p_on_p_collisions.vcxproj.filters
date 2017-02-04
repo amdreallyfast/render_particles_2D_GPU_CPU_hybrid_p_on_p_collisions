@@ -32,9 +32,6 @@
     <ClCompile Include="PolygonSsbo.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleQuadTree.cpp">
-      <Filter>Particles</Filter>
-    </ClCompile>
     <ClCompile Include="QuadTreeNodeSsbo.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
@@ -55,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="ComputeControllerResetQuadTree.cpp">
       <Filter>ComputeControllers</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleQuadTree.cpp">
+      <Filter>QuadTree</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -96,12 +96,6 @@
     <ClInclude Include="PolygonSsbo.h">
       <Filter>Buffers</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleQuadTree.h">
-      <Filter>Particles</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleQuadTreeNode.h">
-      <Filter>Particles</Filter>
-    </ClInclude>
     <ClInclude Include="QuadTreeNodeSsbo.h">
       <Filter>Buffers</Filter>
     </ClInclude>
@@ -123,6 +117,12 @@
     <ClInclude Include="ComputeControllerResetQuadTree.h">
       <Filter>ComputeControllers</Filter>
     </ClInclude>
+    <ClInclude Include="ParticleQuadTree.h">
+      <Filter>QuadTree</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleQuadTreeNode.h">
+      <Filter>QuadTree</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Particles">
@@ -139,6 +139,9 @@
     </Filter>
     <Filter Include="ComputeControllers">
       <UniqueIdentifier>{e20e28db-53e8-45ba-bfd1-761ca3e677cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QuadTree">
+      <UniqueIdentifier>{da067516-a922-4bd9-bed3-a1eec44ef790}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

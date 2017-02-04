@@ -14,7 +14,7 @@ Creator:    John Cox (1-21-2017)
 class ComputeControllerParticleCollisions
 {
 public:
-    ComputeControllerParticleCollisions(unsigned int maxParticles, const glm::vec4 &particleRegionCenter, const std::string computeShaderKey);
+    ComputeControllerParticleCollisions(unsigned int maxParticles, unsigned int maxNodes, const glm::vec4 &particleRegionCenter, const std::string computeShaderKey);
 
     // no destructor because there are no buffers that need to be destroyed
 
@@ -25,6 +25,7 @@ private:
     unsigned int _totalParticles;
 
     int _unifLocMaxParticles;
+    int _unifLocMaxNodes;
     int _unifLocInverseDeltaTimeSec;
     int _unifLoctParticleRegionCenter;
 };

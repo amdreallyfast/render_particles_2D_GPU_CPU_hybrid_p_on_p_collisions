@@ -61,6 +61,7 @@ Description:
     Rather self-explanatory.
 Creator: John Cox (1-10-2017)
 -----------------------------------------------------------------------------------------------*/
+uniform uint uMaxNodes;
 layout (std430) buffer QuadTreeNodeBuffer
 {
     ParticleQuadTreeNode AllNodes[];
@@ -134,15 +135,6 @@ void ParticleCollisionP1WithP2(uint p1Index, uint p2Index)
     // partial pythagorean theorem
     float distanceBetweenSqr = dot(p1ToP2, p1ToP2);
 
-//    float minDistanceForCollisionSqr = (p1._radiusOfInfluence + p2._radiusOfInfluence);
-//    minDistanceForCollisionSqr = minDistanceForCollisionSqr * minDistanceForCollisionSqr;
-//
-//    if (distanceBetweenSqr > minDistanceForCollisionSqr)
-//    {
-//        // nothing to do
-//        return;
-//    }
-
     vec4 normalizedLineOfContact = inversesqrt(distanceBetweenSqr) * p1ToP2;
 
     // ??what else do I call these??
@@ -176,12 +168,12 @@ Description:
     Note: Boundary checks are not performed because the particle is expected to occupy the node 
     that is centered on the argument center.
 Parameters: 
-    particleIndex
-    center
-    nodeIndexTopLeft
-    nodeIndexTopRight
-    nodeIndexBottomLeft
-    nodeIndexBottomRight
+    particleIndex           Self-explanatory.
+    center                  The node's center.
+    nodeIndexTopLeft        The child node in the top left.
+    nodeIndexTopRight       Ditto for top right.
+    nodeIndexBottomLeft     Ditto.
+    nodeIndexBottomRight    Ditto.
 Returns:    
     A node index.  No index bounds checking is performed because (1) conditional branching tanks 
     shader performance and (2) it is expected that quad tree subdivision did its job properly.
@@ -253,8 +245,14 @@ uint FindLeafNode(uint particleIndex)
 
 
 /*-----------------------------------------------------------------------------------------------
-Description:None
-Parameters: None
+Description:
+    This is the filter for adding particles in a non-branching fashion.  It has gotten me a few 
+    frames back when compared to the looping and ensted conditions that there used to be, but 
+    only 2-4.  I was hoping for better.
+Parameters: 
+    invocationParticleIndex The particle referred to in the global invocation ID in main(...).
+    nodeIndex               Self-explanatory.
+    containedParticleIndex  The index into the node's particle collection.
 Returns:    None    
 Creator:    John Cox, 2-4-2017
 -----------------------------------------------------------------------------------------------*/
@@ -265,14 +263,19 @@ void AddPotentiallyCollidableParticle(uint invocationParticleIndex, uint nodeInd
     uint p2Index = AllNodes[nodeIndex]._indicesForContainedParticles[containedParticleIndex];
 
     // this is unlikely, but it is good to account for it
-    // Note: If I get the code and data right, then this condition will never be true.  But I am human, so I make mistakes, and I should catch myself.
+    // Note: If I get the code and data right, then this condition will never be true.  But I am 
+    // human, so I make mistakes, and I should catch myself.
     bool otherParticleInBounds = ((p2Index != -1) && (p2Index < uMaxParticles));
 
-    // there is a high risk that attempting to collide a particle with itself will result in nan when calculating hte normalized line of contact between two particles, so try hard to avoid it
+    // there is a high risk that attempting to collide a particle with itself will result in nan 
+    // when calculating hte normalized line of contact between two particles, so try hard to 
+    // avoid it
     bool differentParticle = (invocationParticleIndex != p2Index);
 
     // check if the particles are within collision distance
-    // Note: Filter the other particle index because it might be bad.  If it is, use the invocationParticleIndex, which is given by the shader's global invocation ID and is thus known to be good.
+    // Note: Filter the other particle index because it might be bad.  If it is, use the 
+    // invocationParticleIndex, which is given by the shader's global invocation ID and is thus 
+    // known to be good.
     uint p2GoodSoFar = uint(nodeIsUsingParticle && otherParticleInBounds && differentParticle);
     uint filteredpP2Index = 
         (p2Index * p2GoodSoFar) + 
@@ -317,23 +320,10 @@ void AddCollidableParticlesFromNode(uint particleIndex, uint nodeIndex)
 {
     // Note: If the maximum number of particles in each node changes, then this function MUST 
     // change or risk a memory access error.    
-
-    //AddPotentiallyCollidableParticle(particleIndex, 0, nodeIndex);
-    //AddPotentiallyCollidableParticle(particleIndex, 1, nodeIndex);
-    //AddPotentiallyCollidableParticle(particleIndex, 2, nodeIndex);
-    //AddPotentiallyCollidableParticle(particleIndex, 3, nodeIndex);
-    //AddPotentiallyCollidableParticle(particleIndex, 4, nodeIndex);
-    //AddPotentiallyCollidableParticle(particleIndex, 5, nodeIndex);
-    //AddPotentiallyCollidableParticle(particleIndex, 6, nodeIndex);
-    //AddPotentiallyCollidableParticle(particleIndex, 7, nodeIndex);
-    //AddPotentiallyCollidableParticle(particleIndex, 8, nodeIndex);
-    //AddPotentiallyCollidableParticle(particleIndex, 9, nodeIndex);
-
-    ParticleQuadTreeNode node = AllNodes[nodeIndex];
-//    for (int i = 0; i < node._numCurrentParticles; i++)
-//    {
-//        collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[i];
-//    }
+    if (nodeIndex == -1 || nodeIndex >= uMaxNodes)
+    {
+        return;
+    }
 
     AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 0);
     AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 1);
@@ -345,81 +335,14 @@ void AddCollidableParticlesFromNode(uint particleIndex, uint nodeIndex)
     AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 7);
     AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 8);
     AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 9);
-
-
-
-//    uint increment = 1;
-//    uint doTheIncrement = 0;
-//    uint containedParticleIndex = 0;
-//
-//    containedParticleIndex = 0;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-//
-//    containedParticleIndex = 1;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-//
-//    containedParticleIndex = 2;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-//
-//    containedParticleIndex = 3;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-//
-//    containedParticleIndex = 4;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-//
-//    containedParticleIndex = 5;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-//
-//    containedParticleIndex = 6;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-//
-//    containedParticleIndex = 7;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-//
-//    containedParticleIndex = 8;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-//
-//    containedParticleIndex = 9;
-//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
-//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
-//    numCollidableParticles += (increment * doTheIncrement);
-
-
-
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[0];
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[1];
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[2];
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[3];
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[4];
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[5];
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[6];
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[7];
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[8];
-//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[9];
-    
 }
 
 /*-----------------------------------------------------------------------------------------------
-Description:None
-Parameters: None
+Description:
+    Manually governs the adding of all collidable particles to the collidableParticleArray.
+Parameters: 
+    particleIndex   The particle that this shader is handling.
+    nodeIndex       The particle's "home" node.
 Returns:    None    
 Creator:    John Cox, 2-4-2017
 -----------------------------------------------------------------------------------------------*/
@@ -440,14 +363,20 @@ void PopulateCollidableParticlesArray(uint particleIndex, uint nodeIndex)
     AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottomLeft);
 }
 
-// TODO: header
+/*-----------------------------------------------------------------------------------------------
+Description:
+    The whole reason all that preparation was done.  Performs one loop through the populated 
+    collidableParticleArray and handles the collisions.
+Parameters: None
+Returns:    None    
+Creator:    John Cox, 2-4-2017
+-----------------------------------------------------------------------------------------------*/
 void ParticleCollisions(uint particleIndex)
 {
     for (int pCounter = 0; pCounter < numCollidableParticles; pCounter ++)
     {
         uint otherParticleIndex = collidableParticleArray[pCounter];
         ParticleCollisionP1WithP2(particleIndex, otherParticleIndex);
-        //AllParticles[particleIndex]._netForceThisFrame.y += +0.001f;
     }
 }
 
@@ -477,11 +406,6 @@ void main()
 
     PopulateCollidableParticlesArray(particleIndex, leafNodeIndex);
     ParticleCollisions(particleIndex);
-
-//    ParticleCollisionsWithinNode(particleIndex, leafNodeIndex);
-//    ParticleCollisionsWithNeighbors(particleIndex, leafNodeIndex);
-
-
 
 }
 
