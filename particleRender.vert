@@ -18,6 +18,8 @@ smooth out vec4 particleColor;
 
 void main()
 {
+    // TODO: replace these condition checks with bool->int cast calculation
+
     if (isActive == 0)
     {
         // invisible (alpha = 0), but "fully transparent" does not mean "no color", it merely 

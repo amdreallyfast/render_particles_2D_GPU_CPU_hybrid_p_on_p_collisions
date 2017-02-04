@@ -10,7 +10,7 @@ Description:
     meant for use only by ParticleQuadTree.
 Creator:    John Cox (12-17-2016)
 -----------------------------------------------------------------------------------------------*/
-const uint MAX_PARTICLES_PER_NODE = 25;
+const uint MAX_PARTICLES_PER_NODE = 10;
 struct ParticleQuadTreeNode
 {
     // this array size MUST match the value specified on the CPU side
