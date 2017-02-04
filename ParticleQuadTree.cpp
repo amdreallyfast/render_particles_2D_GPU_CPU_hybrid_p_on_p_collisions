@@ -109,7 +109,7 @@ Description:
     memset(...) for the rest.
 Parameters: None
 Returns:    None
-Creator:    John Cox (1-28-2016)
+Creator:    John Cox (1-28-2017)
 -----------------------------------------------------------------------------------------------*/
 void ParticleQuadTree::ResetTree()
 {
@@ -237,11 +237,27 @@ Description:
 Parameters: None
 Returns:    
     A pointer to said buffer.
-Creator:    John Cox (1-28-2016)
+Creator:    John Cox (1-28-2017)
 -----------------------------------------------------------------------------------------------*/
-const ParticleQuadTreeNode *ParticleQuadTree::CurrentBuffer() const
+const ParticleQuadTreeNode *ParticleQuadTree::QuadTreeBuffer() const
 {
     return _allNodes;
+}
+
+/*-----------------------------------------------------------------------------------------------
+Description:
+    Returns a pointer to the particle buffer that was slightly modified during the last quad 
+    tree generation.  Each particle was told what node it occupied so that it wouldn't have to 
+    dive in a while(...) loop in the computer shader to find its leaf.
+    uploading the the results back to the GPU.
+Parameters: None
+Returns:    
+    A pointer to said buffer.
+Creator:    John Cox (2-4-2017)
+-----------------------------------------------------------------------------------------------*/
+const Particle *ParticleQuadTree::ParticleBuffer() const
+{
+    return _localParticleArray;
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -251,7 +267,7 @@ Description:
 Parameters: None
 Returns:    
     A pointer to said buffer.
-Creator:    John Cox (1-28-2016)
+Creator:    John Cox (1-28-2017)
 -----------------------------------------------------------------------------------------------*/
 unsigned int ParticleQuadTree::NumActiveNodes() const
 {
@@ -266,7 +282,7 @@ Description:
 Parameters: None
 Returns:    
     See description.
-Creator:    John Cox (1-28-2016)
+Creator:    John Cox (1-28-2017)
 -----------------------------------------------------------------------------------------------*/
 int ParticleQuadTree::NumNodePopulations() const
 {
@@ -278,7 +294,7 @@ Description:
     Resets the count for how many times the quad tree has been generated.  
 Parameters: None
 Returns:    None
-Creator:    John Cox (1-28-2016)
+Creator:    John Cox (1-28-2017)
 -----------------------------------------------------------------------------------------------*/
 void ParticleQuadTree::ResetNumNodePopulations()
 {
@@ -294,7 +310,7 @@ Parameters:
     nodeIndex       Self-explanatory
 Returns:    
     A pointer to said buffer.
-Creator:    John Cox (1-28-2016)
+Creator:    John Cox (1-28-2017)
 -----------------------------------------------------------------------------------------------*/
 bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex)
 {
@@ -377,7 +393,7 @@ Parameters:
 Returns:    
     True if the subdivision was successful, false if there weren't enough nodes for the 
     subdivision.
-Creator:    John Cox (1-28-2016)
+Creator:    John Cox (1-28-2017)
 -----------------------------------------------------------------------------------------------*/
 bool ParticleQuadTree::SubdivideNode(int nodeIndex)
 {

@@ -279,10 +279,8 @@ void Init()
     gpParticleBuffer->ConfigureRender(shaderStorageRef.GetShaderProgram(renderParticlesShaderKey), GL_POINTS);
 
     // set up the quad tree for computation
-    //ParticleQuadTree quadTree(particleRegionCenter, particleRegionRadius);
     gpQuadTree = new ParticleQuadTree(particleRegionCenter, particleRegionRadius);
-    //gpQuadTreeBuffer = new QuadTreeNodeSsbo(quadTree._allQuadTreeNodes);
-    gpQuadTreeBuffer = new QuadTreeNodeSsbo(gpQuadTree->CurrentBuffer(), ParticleQuadTree::MAX_NODES);
+    gpQuadTreeBuffer = new QuadTreeNodeSsbo(gpQuadTree->QuadTreeBuffer(), ParticleQuadTree::MAX_NODES);
     gpQuadTreeBuffer->ConfigureCompute(shaderStorageRef.GetShaderProgram(computeShaderQuadTreeResetKey), "QuadTreeNodeBuffer");
     gpQuadTreeBuffer->ConfigureCompute(shaderStorageRef.GetShaderProgram(ComputeControllerPopulateQuadTreeKey), "QuadTreeNodeBuffer");
     gpQuadTreeBuffer->ConfigureCompute(shaderStorageRef.GetShaderProgram(computeQuadTreeParticleColliderKey), "QuadTreeNodeBuffer");
@@ -419,7 +417,7 @@ void UpdateAllTheThings()
 
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, gpQuadTreeBuffer->BufferId());
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, gpQuadTreeBuffer->BufferSizeBytes(), gpQuadTree->CurrentBuffer());
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, gpQuadTreeBuffer->BufferSizeBytes(), gpQuadTree->QuadTreeBuffer());
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 

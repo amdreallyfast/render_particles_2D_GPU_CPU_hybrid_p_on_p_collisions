@@ -124,14 +124,6 @@ Creator:    John Cox (1-25-2017)
 uniform float uInverseDeltaTimeSec;
 void ParticleCollisionP1WithP2(uint p1Index, uint p2Index)
 {
-    bool p2IndexInvalid = (p2Index == -1) || (p2Index >= uMaxParticles);
-    bool sameParticle = (p1Index == p2Index);
-    if (p2IndexInvalid || sameParticle)
-    {
-        // no comparison with self
-        return;
-    }
-
     // Note: ONLY change p1.  This shader is being run per particle, so the other particle will 
     // do the same calculation with this particle.
     Particle p1 = AllParticles[p1Index];
@@ -142,14 +134,14 @@ void ParticleCollisionP1WithP2(uint p1Index, uint p2Index)
     // partial pythagorean theorem
     float distanceBetweenSqr = dot(p1ToP2, p1ToP2);
 
-    float minDistanceForCollisionSqr = (p1._radiusOfInfluence + p2._radiusOfInfluence);
-    minDistanceForCollisionSqr = minDistanceForCollisionSqr * minDistanceForCollisionSqr;
-
-    if (distanceBetweenSqr > minDistanceForCollisionSqr)
-    {
-        // nothing to do
-        return;
-    }
+//    float minDistanceForCollisionSqr = (p1._radiusOfInfluence + p2._radiusOfInfluence);
+//    minDistanceForCollisionSqr = minDistanceForCollisionSqr * minDistanceForCollisionSqr;
+//
+//    if (distanceBetweenSqr > minDistanceForCollisionSqr)
+//    {
+//        // nothing to do
+//        return;
+//    }
 
     vec4 normalizedLineOfContact = inversesqrt(distanceBetweenSqr) * p1ToP2;
 
@@ -259,6 +251,51 @@ uint FindLeafNode(uint particleIndex)
     return nodeIndex;
 }
 
+
+/*-----------------------------------------------------------------------------------------------
+Description:None
+Parameters: None
+Returns:    None    
+Creator:    John Cox, 2-4-2017
+-----------------------------------------------------------------------------------------------*/
+void AddPotentiallyCollidableParticle(uint invocationParticleIndex, uint nodeIndex, uint containedParticleIndex)
+{
+    // self-explanatory
+    bool nodeIsUsingParticle = (containedParticleIndex < AllNodes[nodeIndex]._numCurrentParticles);
+    uint p2Index = AllNodes[nodeIndex]._indicesForContainedParticles[containedParticleIndex];
+
+    // this is unlikely, but it is good to account for it
+    // Note: If I get the code and data right, then this condition will never be true.  But I am human, so I make mistakes, and I should catch myself.
+    bool otherParticleInBounds = ((p2Index != -1) && (p2Index < uMaxParticles));
+
+    // there is a high risk that attempting to collide a particle with itself will result in nan when calculating hte normalized line of contact between two particles, so try hard to avoid it
+    bool differentParticle = (invocationParticleIndex != p2Index);
+
+    // check if the particles are within collision distance
+    // Note: Filter the other particle index because it might be bad.  If it is, use the invocationParticleIndex, which is given by the shader's global invocation ID and is thus known to be good.
+    uint p2GoodSoFar = uint(nodeIsUsingParticle && otherParticleInBounds && differentParticle);
+    uint filteredpP2Index = 
+        (p2Index * p2GoodSoFar) + 
+        (invocationParticleIndex * (1 - p2GoodSoFar));
+    vec4 p1Pos = AllParticles[invocationParticleIndex]._pos;
+    vec4 p2Pos = AllParticles[p2Index]._pos;
+    vec4 p1ToP2 = p2Pos - p1Pos;
+    float distanceBetweenSqr = dot(p1ToP2, p1ToP2);
+
+    float r1 = AllParticles[invocationParticleIndex]._radiusOfInfluence;
+    float r2 = AllParticles[p2Index]._radiusOfInfluence;
+    float minDistanceForCollisionSqr = (r1 + r2) * (r1 + r2);
+
+    bool otherParticleInCollisionRange = ( distanceBetweenSqr < minDistanceForCollisionSqr);
+
+    // go ahead and blindly stick the other particle's index into the collidableParticleArray and then increment count if necessary
+    // Note: It is ok if it is an invalid index because then the counter won't increment.
+    collidableParticleArray[numCollidableParticles] = p2Index;
+    uint doTheIncrement = uint(nodeIsUsingParticle && otherParticleInBounds && differentParticle && otherParticleInCollisionRange);
+    numCollidableParticles += (1 * doTheIncrement);
+
+}
+
 /*-----------------------------------------------------------------------------------------------
 Description:
     Manually runs through each index in the node's collection of particle indices and adds them
@@ -293,10 +330,80 @@ void AddCollidableParticlesFromNode(uint particleIndex, uint nodeIndex)
     //AddPotentiallyCollidableParticle(particleIndex, 9, nodeIndex);
 
     ParticleQuadTreeNode node = AllNodes[nodeIndex];
-    for (int i = 0; i < node._numCurrentParticles; i++)
-    {
-        collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[i];
-    }
+//    for (int i = 0; i < node._numCurrentParticles; i++)
+//    {
+//        collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[i];
+//    }
+
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 0);
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 1);
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 2);
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 3);
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 4);
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 5);
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 6);
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 7);
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 8);
+    AddPotentiallyCollidableParticle(particleIndex, nodeIndex, 9);
+
+
+
+//    uint increment = 1;
+//    uint doTheIncrement = 0;
+//    uint containedParticleIndex = 0;
+//
+//    containedParticleIndex = 0;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+//
+//    containedParticleIndex = 1;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+//
+//    containedParticleIndex = 2;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+//
+//    containedParticleIndex = 3;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+//
+//    containedParticleIndex = 4;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+//
+//    containedParticleIndex = 5;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+//
+//    containedParticleIndex = 6;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+//
+//    containedParticleIndex = 7;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+//
+//    containedParticleIndex = 8;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+//
+//    containedParticleIndex = 9;
+//    doTheIncrement = uint(containedParticleIndex < node._numCurrentParticles);
+//    collidableParticleArray[numCollidableParticles] = node._indicesForContainedParticles[containedParticleIndex];
+//    numCollidableParticles += (increment * doTheIncrement);
+
+
+
 //    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[0];
 //    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[1];
 //    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[2];

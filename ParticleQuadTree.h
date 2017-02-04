@@ -28,7 +28,8 @@ public:
 
     void ResetTree();
     void AddParticlestoTree(Particle *particleCollection, int numParticles);
-    const ParticleQuadTreeNode *CurrentBuffer() const;
+    const ParticleQuadTreeNode *QuadTreeBuffer() const;
+    const Particle *ParticleBuffer() const;
 
     unsigned int NumActiveNodes() const;
     int NumNodePopulations() const;
