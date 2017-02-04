@@ -11,25 +11,18 @@ Creator:    John Cox (12-17-2016)
 const uint MAX_PARTICLES_PER_NODE = 10;
 struct ParticleQuadTreeNode
 {
-    // TODO: change all uint index counters to int
-
     // this array size MUST match the value specified on the CPU side
     uint _indicesForContainedParticles[MAX_PARTICLES_PER_NODE];
     uint _numCurrentParticles;
 
     int _inUse;
     int _isSubdivided;
-
-    // TODO: change pattern to left-right-top-bottom
     uint _childNodeIndexTopLeft;
     uint _childNodeIndexTopRight;
     uint _childNodeIndexBottomRight;
     uint _childNodeIndexBottomLeft;
 
-    // TODO: change pattern to left-right-top-bottom
-    // Note: The left and right edges are implicitly X, top and bottom implicitly Y.
-    // Also Note: These cannot be easily replaced by a "node center" vec4.  If the edges are 
-    // recorded, then subdivision could not calculate those centers.
+    // left and right edges implicitly X, top and bottom implicitly Y
     float _leftEdge;
     float _topEdge;
     float _rightEdge;
@@ -105,6 +98,85 @@ uint collidableParticleArray[MAX_COLLIDABLE_PARTICLES] = uint[MAX_COLLIDABLE_PAR
 
 /*-----------------------------------------------------------------------------------------------
 Description:
+    If the distance between the two particles is close enough, then an elastic collision is 
+    calculated.  Only the first particle's values are changed.  The second particle is being 
+    handled by another shader invocation.  Rather than immediately change the 1st particle's 
+    velocity (there may be multiple collisions in one frame), the applied force of the second on 
+    the first is calculated.
+
+    Note: For an elastic collision between two particles of equal mass, the velocities of the 
+    two will be exchanged.  I could use this simplified idea for this demo, but I want to 
+    eventually have the option of different masses of particles, so I will use the general 
+    case elastic collision calculations (bottom of page at link).
+    http://hyperphysics.phy-astr.gsu.edu/hbase/colsta.html
+
+    for elastic collisions between two masses (ignoring rotation because these particles are 
+    points), use the calculations from this article (I followed them on paper too and it 
+    seems legit)
+    http://www.gamasutra.com/view/feature/3015/pool_hall_lessons_fast_accurate_.php?page=3
+
+Parameters:
+    p1Index     Index into AllParticles array for particle to change.
+    p2Index     Index into AllParticles array for particle to check against.
+Returns:    None
+Creator:    John Cox (1-25-2017)
+-----------------------------------------------------------------------------------------------*/
+uniform float uInverseDeltaTimeSec;
+void ParticleCollisionP1WithP2(uint p1Index, uint p2Index)
+{
+    bool p2IndexInvalid = (p2Index == -1) || (p2Index >= uMaxParticles);
+    bool sameParticle = (p1Index == p2Index);
+    if (p2IndexInvalid || sameParticle)
+    {
+        // no comparison with self
+        return;
+    }
+
+    // Note: ONLY change p1.  This shader is being run per particle, so the other particle will 
+    // do the same calculation with this particle.
+    Particle p1 = AllParticles[p1Index];
+    Particle p2 = AllParticles[p2Index];
+
+    vec4 p1ToP2 = p1._pos - p2._pos;
+
+    // partial pythagorean theorem
+    float distanceBetweenSqr = dot(p1ToP2, p1ToP2);
+
+    float minDistanceForCollisionSqr = (p1._radiusOfInfluence + p2._radiusOfInfluence);
+    minDistanceForCollisionSqr = minDistanceForCollisionSqr * minDistanceForCollisionSqr;
+
+    if (distanceBetweenSqr > minDistanceForCollisionSqr)
+    {
+        // nothing to do
+        return;
+    }
+
+    vec4 normalizedLineOfContact = inversesqrt(distanceBetweenSqr) * p1ToP2;
+
+    // ??what else do I call these??
+    // Note: I don't have an intuitive understanding of this calculation, but it works.  If I 
+    // understood it better, then I could write better comments, but I don't, so I'm keeping it 
+    // the way that I found in the gamasutra article.
+    float a1 = dot(p1._vel, p1ToP2);
+    float a2 = dot(p2._vel, p1ToP2);
+    float fraction = (2.0f * (a1 - a2)) / (p1._mass + p2._mass);
+    vec4 p1VelocityPrime = p1._vel - (fraction * p2._mass) * normalizedLineOfContact;
+
+    // delta momentum (impulse) = force * delta time
+    // therefore force = delta momentum / delta time
+    vec4 p1InitialMomentum = p1._vel * p1._mass;
+    vec4 p1FinalMomentum = p1VelocityPrime * p1._mass;
+    vec4 p1Force = (p1FinalMomentum - p1InitialMomentum) * uInverseDeltaTimeSec;
+    
+
+    // rathering than writing back the whole particle over and over for each call to this 
+    // function, just write the values that need to be written
+    AllParticles[p1Index]._netForceThisFrame += p1Force;
+
+}
+
+/*-----------------------------------------------------------------------------------------------
+Description:
     This function helps to drill down to find which node a particle occupies.  It eliminates 
     condition branching (shaders are terrible at it) by casting boolean values to integer 
     (0 == false, 1 == true).
@@ -163,6 +235,8 @@ uint FindLeafNode(uint particleIndex)
     uint br = 3;
     uint nodeIndex = WhichNodeIsOccupied(particleIndex, nodeCenter, tl, tr, bl, br);
 
+    // loops involve branch prediction, but there is no other way to it than having the particles' _indexOfNodeThatItIsOccupying modified by the CPU during subdivision and subsequently re-uploaded as well
+    // TODO: do this
     while(AllNodes[nodeIndex]._isSubdivided == 1)
     {
         // drill down to the next subdivision
@@ -183,208 +257,6 @@ uint FindLeafNode(uint particleIndex)
     }
 
     return nodeIndex;
-}
-
-///*-----------------------------------------------------------------------------------------------
-//Description:
-//    Governs the detection of particle-particle collisions with neighboring nodes to the 
-//    particle's starting node.
-//Parameters: 
-//    particleIndex   Find where this particle is living.
-//    nodeIndex       Self-explanatory.
-//Returns:    
-//    True if the particle's position occupies this node, otherwise false.
-//Creator:    John Cox (1-28-2016)
-//-----------------------------------------------------------------------------------------------*/
-//void ParticleCollisionsWithNeighbors(uint particleIndex, uint nodeIndex)
-//{
-//    // check against all 8 neighbors
-//    Particle p = AllParticles[particleIndex];
-//    ParticleQuadTreeNode node = AllNodes[nodeIndex];
-//
-//    float x = p._pos.x;
-//    float y = p._pos.y;
-//    float r = p._radiusOfInfluence;
-//
-//    // sin(45) == cos(45) == sqrt(2) / 2
-//    // Note: The particle's region of influence is circular.  Use a radius value modified by 
-//    // sin(45) to check whether the diagonal radius extends into a neighbor.
-//    float sqrt2Over2 = 0.70710678118f;
-//    float diagonalR = p._radiusOfInfluence * sqrt2Over2;
-//
-//    // remember that y increases from top to bottom (y = 0 at top, y = 1 at bottom)
-//    bool xWithinThisNode = (x > node._leftEdge) && (x < node._rightEdge);
-//    bool xOverlapsLeft = x - r < node._leftEdge;
-//    bool xOverlapsRight = x + r > node._rightEdge;
-//    bool xOverlapsDiagonalLeft = x - diagonalR < node._leftEdge;
-//    bool xOverlapsDiagonalRight = x + diagonalR > node._leftEdge;
-//
-//    bool yWithinThisNode = (y > node._topEdge) && (y < node._bottomEdge);
-//    bool yOverlapsTop = y - r < node._topEdge;
-//    bool yOverlapsBottom = y + r > node._bottomEdge;
-//    bool yOverlapsDiagonalTop = y - diagonalR < node._topEdge;
-//    bool yOverlapsDiagonalBottom = y + diagonalR > node._bottomEdge;
-//
-//    // Note: If a particle is in a corner of a small particle region, it is possible for its 
-//    // region of influence to extend into multiple neighbors, so just use if(...) and not 
-//    // else if(...).
-//    if (xOverlapsDiagonalLeft && yOverlapsDiagonalTop)
-//    {
-//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexTopLeft);
-//    }
-//
-//    if (xWithinThisNode && yOverlapsTop)
-//    {
-//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexTop);
-//    }
-//
-//    if (xOverlapsDiagonalRight && yOverlapsDiagonalTop)
-//    {
-//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexTopRight);
-//    }
-//
-//    if (xOverlapsRight && yWithinThisNode)
-//    {
-//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexRight);
-//    }
-//
-//    if (xOverlapsDiagonalRight && yOverlapsDiagonalBottom)
-//    {
-//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexBottomRight);
-//    }
-//
-//    if (xWithinThisNode && yOverlapsBottom)
-//    {
-//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexBottom);
-//    }
-//
-//    if (xOverlapsDiagonalLeft && yOverlapsDiagonalBottom)
-//    {
-//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexBottomLeft);
-//    }
-//
-//    if (xOverlapsLeft && yWithinThisNode)
-//    {
-//        ParticleCollisionsWithinNode(particleIndex, node._neighborIndexLeft);
-//    }
-//}
-
-/*-----------------------------------------------------------------------------------------------
-Description:
-    Checks if the two particle's radii of influence overlap.
-Parameters: 
-    invocationParticleIndex The particle that this shader invocation is running over.
-    otherParticleIndex      Some other particle in the particle array, or -1.
-Returns:    
-    A boolean (see description).
-Creator:    John Cox (2-4-2017)
------------------------------------------------------------------------------------------------*/
-bool ParticlesAreWithinCollisionRange(uint invocationParticleIndex, uint otherParticleIndex)
-{
-    vec4 p1Pos = AllParticles[invocationParticleIndex]._pos;
-    vec4 p2Pos = AllParticles[otherParticleIndex]._pos;
-    vec4 p1ToP2 = p2Pos - p1Pos;
-    float distanceBetweenSqr = dot(p1ToP2, p1ToP2);
-
-    float r1 = AllParticles[invocationParticleIndex]._radiusOfInfluence;
-    float r2 = AllParticles[otherParticleIndex]._radiusOfInfluence;
-    float maxDistanceForCollisionSqr = (r1 + r2);
-
-    bool areWithinCollisionRange = (distanceBetweenSqr < maxDistanceForCollisionSqr);
-    return areWithinCollisionRange;
-}
-
-/*-----------------------------------------------------------------------------------------------
-Description:
-    Shoves the other particle index into the currently available position in the array, but in 
-    the event that the particle is -1, the two particles are the same, or the particles are not 
-    within collision range, the number of collidable particles remains the same.
-
-    The conditional elimination in this function relies on the casting of a boolean to int, 
-    which results in 1 (true) or 0 (false).  
-Parameters: 
-    invocationParticleIndex     The particle that this shader invocation is running over.
-    nodeIndex
-    containedParticleIndex
-Returns:    None
-Creator:    John Cox (2-4-2017)
------------------------------------------------------------------------------------------------*/
-void AddPotentiallyCollidableParticle(uint invocationParticleIndex, uint nodeIndex, uint containedParticleIndex)
-{
-    uint otherParticleIndex = AllNodes[nodeIndex]._indicesForContainedParticles[containedParticleIndex];
-    bool otherParticleIsBeingUsed = (containedParticleIndex < AllNodes[nodeIndex]._numCurrentParticles);
-    bool otherParticleIndexValid = (otherParticleIndex != -1) && (otherParticleIndex < uMaxParticles);
-    bool otherParticleIsValid = (otherParticleIsBeingUsed && otherParticleIndexValid);
-    
-    if (otherParticleIsValid)
-    {
-        AllParticles[invocationParticleIndex]._netForceThisFrame.y += -0.01f;
-        bool otherParticleIsDifferent = (invocationParticleIndex != otherParticleIndex);
-        if (otherParticleIsDifferent)
-        {
-            bool otherParticleWithinCollisionRange = (ParticlesAreWithinCollisionRange(invocationParticleIndex, otherParticleIndex));
-            if (otherParticleWithinCollisionRange)
-            {
-                collidableParticleArray[numCollidableParticles] = otherParticleIndex;
-                numCollidableParticles += 1;
-            }
-        }
-    }
-    else
-    {
-    }
-
-
-//    // screen the other particle because, in the quest for conditional elimination, this 
-//    // function may be asked to consider a particle that the node isn't using
-//    // Note: The "invocation particle" will always be valid because main(...) filters out 
-//    // invalid particles and inactive particles, so the only particle index in question is the 
-//    // other's.  
-//    bool indexInUse = (containedParticleIndex < AllNodes[nodeIndex]._numCurrentParticles);
-//    uint otherParticleIndex = AllNodes[nodeIndex]._indicesForContainedParticles[containedParticleIndex];
-//    bool indexIsValid = (otherParticleIndex != -1) && (otherParticleIndex < uMaxParticles);
-//    uint otherParticleIsValid = uint(indexInUse && indexIsValid);
-//    uint filteredOtherParticleIndex = 
-//        (otherParticleIsValid * otherParticleIndex) + 
-//        ((1 - otherParticleIsValid) * invocationParticleIndex);
-//
-////    uint filteredOtherParticleIndex = 0;
-////    if (otherParticleIsValid == 1)
-////    {
-////        filteredOtherParticleIndex = otherParticleIndex;
-////        //AllParticles[invocationParticleIndex]._netForceThisFrame.y += +0.01f;
-////    }
-////    else if (otherParticleIsValid == 0)
-////    {
-////        filteredOtherParticleIndex = invocationParticleIndex;
-////        //AllParticles[invocationParticleIndex]._netForceThisFrame.y += -0.01f;
-////    }
-////    else
-////    {
-////        AllParticles[invocationParticleIndex]._netForceThisFrame.x += -0.1f;
-////    }
-//
-//
-//
-//    // no colliding with self
-//    //uint otherParticleIsDifferent = uint(invocationParticleIndex != filteredOtherParticleIndex);
-//    bool otherParticleIsDifferent = (invocationParticleIndex != filteredOtherParticleIndex);
-//
-//    // if the two particles are the same, then they will obviously be within collision range, 
-//    // but sameParticle will be false, so the result will be "not collidable"
-//    //uint otherParticleWithinCollisionRange = uint(ParticlesAreWithinCollisionRange(invocationParticleIndex, filteredOtherParticleIndex));
-//    bool otherParticleWithinCollisionRange = (ParticlesAreWithinCollisionRange(invocationParticleIndex, filteredOtherParticleIndex));
-//
-//    // if any of the checks are false, then the index increment will be false
-//    collidableParticleArray[numCollidableParticles] = filteredOtherParticleIndex;
-//    //uint indexIncrement = 1 * (otherParticleIsValid * otherParticleIsDifferent * otherParticleWithinCollisionRange);
-//    //uint indexIncrement = 1 * (otherParticleWithinCollisionRange);
-//    // numCollidableParticles += indexIncrement;
-//    if (otherParticleIsDifferent && otherParticleWithinCollisionRange)
-//    {
-//        numCollidableParticles += 1;
-//    }
-    
 }
 
 /*-----------------------------------------------------------------------------------------------
@@ -409,133 +281,68 @@ void AddCollidableParticlesFromNode(uint particleIndex, uint nodeIndex)
     // Note: If the maximum number of particles in each node changes, then this function MUST 
     // change or risk a memory access error.    
 
-    AddPotentiallyCollidableParticle(particleIndex, 0, nodeIndex);
-    AddPotentiallyCollidableParticle(particleIndex, 1, nodeIndex);
-    AddPotentiallyCollidableParticle(particleIndex, 2, nodeIndex);
-    AddPotentiallyCollidableParticle(particleIndex, 3, nodeIndex);
-    AddPotentiallyCollidableParticle(particleIndex, 4, nodeIndex);
-    AddPotentiallyCollidableParticle(particleIndex, 5, nodeIndex);
-    AddPotentiallyCollidableParticle(particleIndex, 6, nodeIndex);
-    AddPotentiallyCollidableParticle(particleIndex, 7, nodeIndex);
-    AddPotentiallyCollidableParticle(particleIndex, 8, nodeIndex);
-    AddPotentiallyCollidableParticle(particleIndex, 9, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 0, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 1, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 2, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 3, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 4, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 5, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 6, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 7, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 8, nodeIndex);
+    //AddPotentiallyCollidableParticle(particleIndex, 9, nodeIndex);
+
+    ParticleQuadTreeNode node = AllNodes[nodeIndex];
+    for (int i = 0; i < node._numCurrentParticles; i++)
+    {
+        collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[i];
+    }
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[0];
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[1];
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[2];
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[3];
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[4];
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[5];
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[6];
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[7];
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[8];
+//    collidableParticleArray[numCollidableParticles++] = node._indicesForContainedParticles[9];
+    
 }
 
 /*-----------------------------------------------------------------------------------------------
-Description:
-    Calculate an elastic collision between two particles.  Rather than immediately change the 
-    1st particle's velocity (there may be multiple collisions in one frame), the applied force 
-    of the second on the first is calculated.
-    
-    ONLY modify the values of the FIRST particle.  The second particle is being handled by 
-    another shader invocation.  
-
-    Note: The don't check if the particles are close enough.  That was handled previously when 
-    collidableParticleArray was being filled out.
-
-    Note: For an elastic collision between two particles of equal mass, the velocities of the 
-    two will be exchanged.  I could use this simplified idea for this demo, but I want to 
-    eventually have the option of different masses of particles, so I will use the general 
-    case elastic collision calculations (bottom of page at link).
-    http://hyperphysics.phy-astr.gsu.edu/hbase/colsta.html
-
-    For elastic collisions between two masses (ignoring rotation because these particles are 
-    points), use the calculations from this article (I followed them on paper too and it 
-    seems legit).
-    http://www.gamasutra.com/view/feature/3015/pool_hall_lessons_fast_accurate_.php?page=3
-
-Parameters:
-    p1Index     Index into AllParticles array for particle to change.
-    p2Index     Index into AllParticles array for particle to check against.
-Returns:    None
-Creator:    John Cox (1-25-2017)
------------------------------------------------------------------------------------------------*/
-uniform float uInverseDeltaTimeSec;
-void ParticleCollisionP1WithP2(uint p1Index, uint p2Index)
-{
-    // Note: ONLY change p1.  This shader is being run per particle, so the other particle will 
-    // do the same calculation with this particle.
-    Particle p1 = AllParticles[p1Index];
-    Particle p2 = AllParticles[p2Index];
-    vec4 lineOfContact = p1._pos - p2._pos;
-    float distanceBetweenSqr = dot(lineOfContact, lineOfContact);
-    vec4 normalizedLineOfContact = inversesqrt(distanceBetweenSqr) * lineOfContact;
-
-    // ??what else do I call these??
-    // Note: I don't have an intuitive understanding of this calculation, but it works.  If I 
-    // understood it better, then I could write better comments, but I don't, so I'm keeping it 
-    // the way that I found in the gamasutra article.
-    float a1 = dot(p1._vel, lineOfContact);
-    float a2 = dot(p2._vel, lineOfContact);
-    float fraction = (2.0f * (a1 - a2)) / (p1._mass + p2._mass);
-    vec4 p1VelocityPrime = p1._vel - (fraction * p2._mass) * normalizedLineOfContact;
-
-    // delta momentum (impulse) = force * delta time
-    // therefore force = delta momentum / delta time
-    vec4 p1InitialMomentum = p1._vel * p1._mass;
-    vec4 p1FinalMomentum = p1VelocityPrime * p1._mass;
-    vec4 p1Force = (p1FinalMomentum - p1InitialMomentum) * uInverseDeltaTimeSec;
-    
-    // rathering than writing back the whole particle over and over for each call to this 
-    // function, just write the values that need to be written
-    AllParticles[p1Index]._netForceThisFrame += p1Force;
-}
-
-/*-----------------------------------------------------------------------------------------------
-Description:
-    The coup-de-grace that all the other functions were preparing for.
-Parameters: 
-    particleIndex   The particle that this shader is running for.
-Returns:    None
+Description:None
+Parameters: None
+Returns:    None    
 Creator:    John Cox, 2-4-2017
 -----------------------------------------------------------------------------------------------*/
-void ParticleCollisions(uint particleIndex)
+void PopulateCollidableParticlesArray(uint particleIndex, uint nodeIndex)
 {
-//    if (numCollidableParticles == 0)
-//    {
-//        AllParticles[particleIndex]._netForceThisFrame.y = -0.1f;
-//    }
-//    else
-//    {
-//        AllParticles[particleIndex]._netForceThisFrame.y = +0.1f;
-//    }
+    // determine which, if any, of the particles from the "home" node are within collision range
+    AddCollidableParticlesFromNode(particleIndex, nodeIndex);
 
-    for (uint p2Index = 0; p2Index < numCollidableParticles; p2Index++)
-    {
-        // TODO: dump that function's code into this loop
-        //ParticleCollisionP1WithP2(particleIndex, collidableParticleArray[p2Index]);
-        AllParticles[particleIndex]._collisionCountThisFrame++;
-    }
-
-//    if (nodeIndex == -1)
-//    {
-//        // Note: Whichever node gave -1 for its neighbor is on the edge of quad tree
-//        return;
-//    }
-//
-//    // MUST perform this condition check or else the "node._numCurrentParticles - 1" later could 
-//    // result in a uint being assigned -1, which is very very big
-//    if (AllNodes[nodeIndex]._numCurrentParticles == 0)
-//    {
-//        return;
-//    }
-//
-//    ParticleQuadTreeNode node = AllNodes[nodeIndex];
-//    for (uint pCount = 0; pCount < node._numCurrentParticles - 1; pCount++)
-//    {
-//        //AllParticles[particleIndex]._collisionCountThisFrame += 1;
-//        
-//        uint otherParticleIndex = node._indicesForContainedParticles[pCount];
-//        if (otherParticleIndex >= uMaxParticles)
-//        {
-//            // it may be an uninitialized -1 index
-//            continue;
-//        }
-//
-//        ParticleCollisionP1WithP2(particleIndex, otherParticleIndex);
-//    }
+    // repeat for all neighboring particles
+    ParticleQuadTreeNode node = AllNodes[nodeIndex];
+    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexLeft);
+    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexTopLeft);
+    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexTop);
+    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexTopRight);
+    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexRight);
+    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottomRight);
+    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottom);
+    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottomLeft);
 }
 
+// TODO: header
+void ParticleCollisions(uint particleIndex)
+{
+    for (int pCounter = 0; pCounter < numCollidableParticles; pCounter ++)
+    {
+        uint otherParticleIndex = collidableParticleArray[pCounter];
+        ParticleCollisionP1WithP2(particleIndex, otherParticleIndex);
+        //AllParticles[particleIndex]._netForceThisFrame.y += +0.001f;
+    }
+}
 
 /*-----------------------------------------------------------------------------------------------
 Description:
@@ -553,81 +360,21 @@ void main()
         return;
     }
 
-    Particle p = AllParticles[particleIndex];
-    if (p._isActive == 0)
+    if (AllParticles[particleIndex]._isActive == 0)
     {
         return;
     }
 
-//    // drill down from the first four nodes (initial subdivision)
-//    // Note: The following calculations replace a series of if-then-else statements for 
-//    // determining the starting node index.
-//    // Also Note: See enum FIRST_FOUR_NODE_INDEXES in ParticleQuadTree for the indices of the 
-//    // first four nodes.  These are manual reproductions of it.
-//    // Also Also Note: Thanks to a co-worker of mine for this algorithm.
-//    
-//    // this algorithm relies on the sign change + -> - across the axis and vice versa, so the 
-//    // first step is to account for non-origin particle region center.
-//    float particleXCentered = p._pos.x - uParticleRegionCenter.x;
-//    float particleYCentered = p._pos.y - uParticleRegionCenter.y;
-//
-//    // convert the particle axis' positions to -1.0f/+1.0f
-//    float particleXUnity = abs(particleXCentered) / particleXCentered;
-//    float particleYUnity = abs(particleYCentered) / particleYCentered;
-//
-//    // +-1.0f + 0.5f => -0.5f/+1.5f
-//    particleXUnity += 0.5f;
-//    particleYUnity += 0.5f;
-//
-//    // the absolute value is +0.5/+1.5f
-//    particleXUnity = abs(particleXUnity);
-//    particleYUnity = abs(particleYUnity);
-//
-//    // jam the values into an integer to get 0/1
-//    // Note: If the particle X is left of 0, then the previous calculations will result in 
-//    // particleXUnity = +0.5.  Putting that into an integer will result in a 0.  I am trying to 
-//    // recreate a boolean value, so if particleXUnity is integer-ified, then it will be 0 and 
-//    // therefore false.  So a particle X is left of 0, then it will simplified to integer 0 
-//    // ("false"), which means "is right".  Similarly, a particle Y below zero will be simplified 
-//    // to integer 0 (false), which means "is top".
-//    uint isRight = int(particleXUnity);
-//    uint isTop = int(particleYUnity);
-//
-//    // use the integer values as true/false substitutes
-//    // Note: The result of these multiplications is that every entry is 0 or non-0 except for 
-//    // the top left, which is already index 0.  These values are summed together later, so the 
-//    // only way to get the top left node's index is for all others to be 0.  This is ok.
-//    uint isTopLeftIndex = 0 * ((1 - isRight) * isTop);
-//    uint isTopRightIndex = 1 * (isRight * isTop);
-//    uint isBottomLeftIndex = 2 * ((1 - isRight) * (1 - isTop));
-//    uint isBottomRightIndex = 3 * (isRight * (1 - isTop));
-//
-//    // only one of the first four indices will be non-zero
-//    uint startingNodeIndex = isTopLeftIndex + isTopRightIndex +  isBottomLeftIndex +  isBottomRightIndex;
-//
-//    uint leafNodeIndex = FindLeafNode(particleIndex, startingNodeIndex);
-//
-//
-////    ParticleCollisionsWithinNode(particleIndex, leafNodeIndex);
-////    ParticleCollisionsWithNeighbors(particleIndex, leafNodeIndex);
-
 
     uint leafNodeIndex = FindLeafNode(particleIndex);
 
-    // determine which, if any, of the particles from the "home" node are within collision range
-    AddCollidableParticlesFromNode(particleIndex, leafNodeIndex);
-
-    // repeat for all neighboring particles
-    ParticleQuadTreeNode node = AllNodes[leafNodeIndex];
-    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexLeft);
-    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexTopLeft);
-    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexTop);
-    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexTopRight);
-    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexRight);
-    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottomRight);
-    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottom);
-    AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottomLeft);
-
+    PopulateCollidableParticlesArray(particleIndex, leafNodeIndex);
     ParticleCollisions(particleIndex);
+
+//    ParticleCollisionsWithinNode(particleIndex, leafNodeIndex);
+//    ParticleCollisionsWithNeighbors(particleIndex, leafNodeIndex);
+
+
+
 }
 

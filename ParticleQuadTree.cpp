@@ -320,6 +320,11 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex)
         int childNodeIndex = 0;
         Particle &p = _localParticleArray[particleIndex];
 
+        if (isnan(p._position.y))
+        {
+            printf("");
+        }
+
         // TODO: try replacing conditions with index calculation via ternary operator
         if (p._position.y < nodeCenterY)
         {
