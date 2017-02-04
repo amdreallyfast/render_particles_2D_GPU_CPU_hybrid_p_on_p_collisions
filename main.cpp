@@ -298,18 +298,18 @@ void Init()
     // that the particles collide near the middle with a slight upward velocity
 
     // bar on the left and emitting up and right
-    glm::vec2 bar1P1(-0.5f, +0.1f);
-    glm::vec2 bar1P2(-0.5f, -0.1f);
-    glm::vec2 emitDir1(+1.0f, +0.5f);
+    glm::vec2 bar1P1(-0.5f, +0.5f);
+    glm::vec2 bar1P2(-0.5f, -0.0f);
+    glm::vec2 emitDir1(+1.0f, +0.0f);
     float minVel = 0.1f;
     float maxVel = 0.5f;
     gpParticleEmitterBar1 = new ParticleEmitterBar(bar1P1, bar1P2, emitDir1, minVel, maxVel);
     gpParticleEmitterBar1->SetTransform(windowSpaceTransform);
 
     // bar on the right and emitting up and left
-    glm::vec2 bar2P1 = glm::vec2(+0.5f, +0.1f);
-    glm::vec2 bar2P2 = glm::vec2(+0.5f, -0.1f);
-    glm::vec2 emitDir2 = glm::vec2(-1.0f, +0.5f);
+    glm::vec2 bar2P1 = glm::vec2(-0.1f, -0.5f);
+    glm::vec2 bar2P2 = glm::vec2(+0.2f, -0.5f);
+    glm::vec2 emitDir2 = glm::vec2(-0.0f, +0.5f);
     gpParticleEmitterBar2 = new ParticleEmitterBar(bar2P1, bar2P2, emitDir2, minVel, maxVel);
     gpParticleEmitterBar2->SetTransform(windowSpaceTransform);
 

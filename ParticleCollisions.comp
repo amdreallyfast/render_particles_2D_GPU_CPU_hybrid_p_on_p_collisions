@@ -125,27 +125,22 @@ Creator:    John Cox (1-25-2017)
 uniform float uInverseDeltaTimeSec;
 void ParticleCollisionP1WithP2(uint p1Index, uint p2Index)
 {
-    // Note: ONLY change p1.  This shader is being run per particle, so the other particle will 
-    // do the same calculation with this particle.
+//    AllParticles[p1Index]._netForceThisFrame.y += -0.001f;
+
     Particle p1 = AllParticles[p1Index];
     Particle p2 = AllParticles[p2Index];
 
-    vec4 p1ToP2 = p1._pos - p2._pos;
-
-    // partial pythagorean theorem
-    float distanceBetweenSqr = dot(p1ToP2, p1ToP2);
-
-    vec4 normalizedLineOfContact = inversesqrt(distanceBetweenSqr) * p1ToP2;
+    vec4 lineOfContact = p2._pos - p1._pos;
+    float distanceBetweenSqr = dot(lineOfContact, lineOfContact);
+    vec4 normalizedLineOfContact = inversesqrt(distanceBetweenSqr) * lineOfContact;
 
     // ??what else do I call these??
     // Note: I don't have an intuitive understanding of this calculation, but it works.  If I 
     // understood it better, then I could write better comments, but I don't, so I'm keeping it 
     // the way that I found in the gamasutra article.
-    float a1 = dot(p1._vel, p1ToP2);
-    float a2 = dot(p2._vel, p1ToP2);
-    float inverseMass = 5;  // 1 / 0.2 
-    //float fraction = (2.0f * (a1 - a2)) / (p1._mass + p2._mass);
-    float fraction = (2.0f * (a1 - a2)) * inverseMass;
+    float a1 = dot(p1._vel, lineOfContact);
+    float a2 = dot(p2._vel, lineOfContact);
+    float fraction = (2.0f * (a1 - a2)) / (p1._mass + p2._mass);
     vec4 p1VelocityPrime = p1._vel - (fraction * p2._mass) * normalizedLineOfContact;
 
     // delta momentum (impulse) = force * delta time
@@ -154,11 +149,12 @@ void ParticleCollisionP1WithP2(uint p1Index, uint p2Index)
     vec4 p1FinalMomentum = p1VelocityPrime * p1._mass;
     vec4 p1Force = (p1FinalMomentum - p1InitialMomentum) * uInverseDeltaTimeSec;
     
+    p1._netForceThisFrame += p1Force;
+    p1._collisionCountThisFrame++;
 
-    // rathering than writing back the whole particle over and over for each call to this 
-    // function, just write the values that need to be written
-    AllParticles[p1Index]._netForceThisFrame += p1Force;
-
+    // Note: ONLY write back p1.  This shader is being run per particle, so the other particle 
+    // will do the same calculation with this particle.
+    AllParticles[p1Index] = p1;
 }
 
 /*-----------------------------------------------------------------------------------------------
