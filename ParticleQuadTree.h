@@ -5,7 +5,6 @@
 
 #include "ParticleQuadTreeNode.h"
 #include "Particle.h"
-#include "ParticleCollisionCandidates.h"
 
 
 /*-----------------------------------------------------------------------------------------------
@@ -26,8 +25,6 @@ class ParticleQuadTree
 public:
     ParticleQuadTree(const glm::vec4 &particleRegionCenter, float particleRegionRadius);
 
-    void GenerateCollisionCandidates(Particle *particleCollection, int numParticles);
-
     void ResetTree();
     void AddParticlestoTree(Particle *particleCollection, int numParticles);
     const ParticleQuadTreeNode *QuadTreeBuffer() const;
@@ -41,9 +38,6 @@ public:
     static const int MAX_NODES = 256 * 256;
 
 private:
-    void AddCollidableParticlesFromNode(unsigned int particleIndex, unsigned int nodeIndex);
-    void AddPotentiallyCollidableParticle(unsigned int p1Index, unsigned int p2Index);
-
     bool AddParticleToNode(int particleIndex, int nodeIndex);
     bool SubdivideNode(int nodeIndex);
 
@@ -65,5 +59,4 @@ private:
     float _particleRegionRadius;
 
     Particle _localParticleArray[Particle::MAX_PARTICLES];
-    ParticleCollisionCandidates _collisionCandidatesPerParticle[Particle::MAX_PARTICLES];
 };

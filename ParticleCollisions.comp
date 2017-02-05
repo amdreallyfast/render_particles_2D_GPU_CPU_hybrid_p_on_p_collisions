@@ -159,44 +159,6 @@ void ParticleCollisionP1WithP2(uint p1Index, uint p2Index)
 
 /*-----------------------------------------------------------------------------------------------
 Description:
-    This function helps to drill down to find which node a particle occupies.  It eliminates 
-    condition branching (shaders are terrible at it) by casting boolean values to integer 
-    (0 == false, 1 == true).
-
-    Note: Boundary checks are not performed because the particle is expected to occupy the node 
-    that is centered on the argument center.
-Parameters: 
-    particleIndex           Self-explanatory.
-    center                  The node's center.
-    nodeIndexTopLeft        The child node in the top left.
-    nodeIndexTopRight       Ditto for top right.
-    nodeIndexBottomLeft     Ditto.
-    nodeIndexBottomRight    Ditto.
-Returns:    
-    A node index.  No index bounds checking is performed because (1) conditional branching tanks 
-    shader performance and (2) it is expected that quad tree subdivision did its job properly.
-Creator:    John Cox, 2-4-2017
------------------------------------------------------------------------------------------------*/
-uint WhichNodeIsOccupied(uint particleIndex, vec4 center, uint nodeIndexTopLeft, 
-    uint nodeIndexTopRight, uint nodeIndexBottomLeft, uint nodeIndexBottomRight)
-{
-    vec4 particlePos = AllParticles[particleIndex]._pos;
-    uint isLeft = uint(particlePos.x < center.x);
-    uint isTop = uint(particlePos.y > center.y);
-
-    uint isTopLeftIndex = nodeIndexTopLeft * (isLeft * isTop);
-    uint isTopRightIndex = nodeIndexTopRight * ((1 - isLeft) * isTop);
-    uint isBottomLeftIndex = nodeIndexBottomLeft * (isLeft * (1 - isTop));
-    uint isBottomRightIndex = nodeIndexBottomRight * ((1 - isLeft) * (1 - isTop));
-
-    // only one of the first four indices will be non-zero
-    uint occupiedNodeIndex = isTopLeftIndex + isTopRightIndex +  isBottomLeftIndex +  isBottomRightIndex;
-
-    return occupiedNodeIndex;
-}
-
-/*-----------------------------------------------------------------------------------------------
-Description:
     Starting with the initial subdivision, dives down through subdivisions to find the deepest 
     leaf that the particle occupies.
 Parameters: 
@@ -208,39 +170,66 @@ Creator:    John Cox, 2-4-2017
 uniform vec4 uParticleRegionCenter;
 uint FindLeafNode(uint particleIndex)
 {
-    return AllParticles[particleIndex]._indexOfNodeThatItIsOccupying;
+    //return AllParticles[particleIndex]._indexOfNodeThatItIsOccupying;
 
-//    vec4 nodeCenter = uParticleRegionCenter;
-//
-//    // initial subdivision is nodes 0 - 4
-//    uint tl = 0;
-//    uint tr = 1;
-//    uint bl = 2;
-//    uint br = 3;
-//    uint nodeIndex = WhichNodeIsOccupied(particleIndex, nodeCenter, tl, tr, bl, br);
-//
-//    // loops involve branch prediction, but there is no other way to it than having the particles' _indexOfNodeThatItIsOccupying modified by the CPU during subdivision and subsequently re-//uploaded as well
-//    // TODO: do this
-//    while(AllNodes[nodeIndex]._isSubdivided == 1)
-//    {
-//        // drill down to the next subdivision
-//        // Note: It was already determined that the particle was in the starting node, so no 
-//        // bounds checking is required.  I just have to figure out where it is compared to the 
-//        // center (the nexus of the child nodes).
-//
-//        // accessing several items from the node, so go ahead and make a copy 
-//        ParticleQuadTreeNode node = AllNodes[nodeIndex];
-//        nodeCenter.x = (node._leftEdge + node._rightEdge) * 0.5f;
-//        nodeCenter.y = (node._topEdge + node._bottomEdge) * 0.5f;
-//        tl = node._childNodeIndexTopLeft;
-//        tr = node._childNodeIndexTopRight;
-//        bl = node._childNodeIndexBottomLeft;
-//        br = node._childNodeIndexBottomRight;
-//
-//        nodeIndex = WhichNodeIsOccupied(particleIndex, nodeCenter, tl, tr, bl, br);
-//    }
-//
-//    return nodeIndex;
+    // initial subdivision is nodes 0 - 4
+    uint tl = 0;
+    uint tr = 1;
+    uint bl = 2;
+    uint br = 3;
+    vec4 particlePos = AllParticles[particleIndex]._pos;
+    vec4 nodeCenter = uParticleRegionCenter;
+    
+    uint isLeft = uint(particlePos.x < nodeCenter.x);
+    uint isRight = 1 - isLeft;
+    uint isTop = uint(particlePos.y > nodeCenter.y);
+    uint isBottom = 1 - isTop;
+
+    uint topLeftIndex = tl * (isLeft * isTop);
+    uint topRightIndex = tr * (isRight * isTop);
+    uint bottomLeftIndex = bl * (isLeft * isBottom);
+    uint bottomRightIndex = br * (isRight * isBottom);
+
+    // only one of the first four indices will be non-zero
+    uint nodeIndex = topLeftIndex + topRightIndex + bottomLeftIndex + bottomRightIndex;
+
+    // loops involve branch prediction, but there is no other way to it than having the 
+    // particles' _indexOfNodeThatItIsOccupying modified by the CPU during subdivision and 
+    // subsequently re-uploaded as well
+    // Note: I tried that approach.  The additional time required on each frame to upload the 
+    // particle array to the GPU in addition to downloading it earlier and uploading the quad 
+    // tree array proved to sap any gains that this approach may have had.  The end result may 
+    // have actually lost a few frames, but it was hard to tell
+    while(AllNodes[nodeIndex]._isSubdivided == 1)
+    {
+        // drill down to the next subdivision
+        // Note: It was already determined that the particle was in the starting node, so no 
+        // bounds checking is required.  I just have to figure out where it is compared to the 
+        // center (the nexus of the child nodes).
+
+        // accessing several items from the node, so go ahead and make a copy 
+        ParticleQuadTreeNode node = AllNodes[nodeIndex];
+        nodeCenter.x = (node._leftEdge + node._rightEdge) * 0.5f;
+        nodeCenter.y = (node._topEdge + node._bottomEdge) * 0.5f;
+        tl = node._childNodeIndexTopLeft;
+        tr = node._childNodeIndexTopRight;
+        bl = node._childNodeIndexBottomLeft;
+        br = node._childNodeIndexBottomRight;
+
+        isLeft = uint(particlePos.x < nodeCenter.x);
+        isRight = 1 - isLeft;
+        isTop = uint(particlePos.y > nodeCenter.y);
+        isBottom = 1 - isTop;
+
+        topLeftIndex = tl * (isLeft * isTop);
+        topRightIndex = tr * (isRight * isTop);
+        bottomLeftIndex = bl * (isLeft * isBottom);
+        bottomRightIndex = br * (isRight * isBottom);
+        
+        nodeIndex = topLeftIndex + topRightIndex + bottomLeftIndex + bottomRightIndex;
+    }
+
+    return nodeIndex;
 }
 
 
@@ -367,7 +356,8 @@ void PopulateCollidableParticlesArray(uint particleIndex, uint nodeIndex)
 Description:
     The whole reason all that preparation was done.  Performs one loop through the populated 
     collidableParticleArray and handles the collisions.
-Parameters: None
+Parameters: 
+    particleIndex   The particle that this shader invocation is running over.
 Returns:    None    
 Creator:    John Cox, 2-4-2017
 -----------------------------------------------------------------------------------------------*/
@@ -403,10 +393,9 @@ void main()
     }
 
 
-//    uint leafNodeIndex = FindLeafNode(particleIndex);
-//
-//    PopulateCollidableParticlesArray(particleIndex, leafNodeIndex);
-//    ParticleCollisions(particleIndex);
+    uint leafNodeIndex = FindLeafNode(particleIndex);
+    PopulateCollidableParticlesArray(particleIndex, leafNodeIndex);
+    ParticleCollisions(particleIndex);
 
 }
 

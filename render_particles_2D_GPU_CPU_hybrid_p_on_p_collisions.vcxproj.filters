@@ -56,9 +56,6 @@
     <ClCompile Include="ParticleQuadTree.cpp">
       <Filter>CollisionDetection</Filter>
     </ClCompile>
-    <ClCompile Include="ParticleCollisionCandidateSsbo.cpp">
-      <Filter>Buffers</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OpenGlErrorHandling.h" />
@@ -126,12 +123,6 @@
     <ClInclude Include="ParticleQuadTreeNode.h">
       <Filter>CollisionDetection</Filter>
     </ClInclude>
-    <ClInclude Include="ParticleCollisionCandidateSsbo.h">
-      <Filter>Buffers</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleCollisionCandidates.h">
-      <Filter>CollisionDetection</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Particles">
@@ -188,9 +179,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="ParticleRender.vert">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="ParticleCollision2.comp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
