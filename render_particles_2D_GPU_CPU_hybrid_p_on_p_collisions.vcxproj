@@ -150,8 +150,6 @@
     <ClCompile Include="ComputeControllerParticleCollisions.cpp" />
     <ClCompile Include="ComputeControllerParticleReset.cpp" />
     <ClCompile Include="ComputeControllerParticleUpdate.cpp" />
-    <ClCompile Include="ComputeControllerPopulateQuadTree.cpp" />
-    <ClCompile Include="ComputeControllerResetQuadTree.cpp" />
     <ClCompile Include="FreeTypeAtlas.cpp" />
     <ClCompile Include="FreeTypeEncapsulated.cpp" />
     <ClCompile Include="main.cpp" />
@@ -173,8 +171,6 @@
     <ClInclude Include="ComputeControllerParticleCollisions.h" />
     <ClInclude Include="ComputeControllerParticleReset.h" />
     <ClInclude Include="ComputeControllerParticleUpdate.h" />
-    <ClInclude Include="ComputeControllerPopulateQuadTree.h" />
-    <ClInclude Include="ComputeControllerResetQuadTree.h" />
     <ClInclude Include="FreeTypeAtlas.h" />
     <ClInclude Include="FreeTypeEncapsulated.h" />
     <ClInclude Include="MyVertex.h" />
@@ -206,8 +202,6 @@
     <None Include="ParticleRender.vert" />
     <None Include="ParticleReset.comp" />
     <None Include="ParticleUpdate.comp" />
-    <None Include="PopulateQuadTree.comp" />
-    <None Include="ResetQuadTree.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

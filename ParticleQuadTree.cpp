@@ -312,7 +312,15 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex)
     }
 
     // TODO: attempt performance boost by checking if (!subdivided) to see if the CPU assumes that the condition is true
-    if (node._isSubdivided)
+    if (!node._isSubdivided)
+    {
+        // not subdivided, so add the particle to this node
+        node._indicesForContainedParticles[node._numCurrentParticles++] = particleIndex;
+        _localParticleArray[particleIndex]._indexOfNodeThatItIsOccupying = nodeIndex;
+
+        return true;
+    }
+    else
     {
         // don't need to check >left && < right && >bottom && <top because the first calculations already determined that the particle was (1) within bounds (read, "active") and (2) within one of the first nodes, so every following quadrant check just needs to check against the center values
         float nodeCenterX = (node._leftEdge + node._rightEdge) * 0.5f;
@@ -336,14 +344,6 @@ bool ParticleQuadTree::AddParticleToNode(int particleIndex, int nodeIndex)
 
         // go deeper
         return AddParticleToNode(particleIndex, childNodeIndex);
-    }
-    else
-    {
-        // not subdivided, so add the particle to this node
-        node._indicesForContainedParticles[node._numCurrentParticles++] = particleIndex;
-        _localParticleArray[particleIndex]._indexOfNodeThatItIsOccupying = nodeIndex;
-
-        return true;
     }
 }
 

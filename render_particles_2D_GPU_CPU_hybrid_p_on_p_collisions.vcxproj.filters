@@ -47,12 +47,6 @@
     <ClCompile Include="ComputeControllerParticleUpdate.cpp">
       <Filter>ComputeControllers</Filter>
     </ClCompile>
-    <ClCompile Include="ComputeControllerPopulateQuadTree.cpp">
-      <Filter>ComputeControllers</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeControllerResetQuadTree.cpp">
-      <Filter>ComputeControllers</Filter>
-    </ClCompile>
     <ClCompile Include="ParticleQuadTree.cpp">
       <Filter>CollisionDetection</Filter>
     </ClCompile>
@@ -111,12 +105,6 @@
     <ClInclude Include="ComputeControllerParticleUpdate.h">
       <Filter>ComputeControllers</Filter>
     </ClInclude>
-    <ClInclude Include="ComputeControllerPopulateQuadTree.h">
-      <Filter>ComputeControllers</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeControllerResetQuadTree.h">
-      <Filter>ComputeControllers</Filter>
-    </ClInclude>
     <ClInclude Include="ParticleQuadTree.h">
       <Filter>CollisionDetection</Filter>
     </ClInclude>
@@ -155,12 +143,6 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="ParticleUpdate.comp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="PopulateQuadTree.comp">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="ResetQuadTree.comp">
       <Filter>Shaders</Filter>
     </None>
     <None Include="FreeType.frag">
