@@ -14,7 +14,7 @@ class QuadTreeNodeSsbo : public SsboBase
 {
 public:
     QuadTreeNodeSsbo(const ParticleQuadTreeNode *nodeCollection, int numNodes);
-    virtual ~QuadTreeNodeSsbo();
+    virtual ~QuadTreeNodeSsbo() override = default; // empty override of base destructor
 
     void ConfigureCompute(unsigned int computeProgramId, const std::string &bufferNameInShader) override;
     void ConfigureRender(unsigned int renderProgramId, unsigned int drawStyle) override;

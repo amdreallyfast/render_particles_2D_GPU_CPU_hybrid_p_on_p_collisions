@@ -26,7 +26,6 @@ struct Particle
         _collisionCountThisFrame(0),
         _mass(0.1f),
         _radiusOfInfluence(0.007f),
-        //_radiusOfInfluence(0.01f),
         _indexOfNodeThatItIsOccupying(0),
         _isActive(0)
     {

@@ -157,6 +157,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MinMaxVelocity.cpp" />
     <ClCompile Include="OpenGlErrorHandling.cpp" />
+    <ClCompile Include="ParticleCollisionCandidateSsbo.cpp" />
     <ClCompile Include="ParticleEmitterBar.cpp" />
     <ClCompile Include="ParticleEmitterPoint.cpp" />
     <ClCompile Include="ParticleQuadTree.cpp" />
@@ -177,7 +178,9 @@
     <ClInclude Include="ComputeControllerResetQuadTree.h" />
     <ClInclude Include="FreeTypeAtlas.h" />
     <ClInclude Include="FreeTypeEncapsulated.h" />
+    <ClInclude Include="ParticleCollisionCandidates.h" />
     <ClInclude Include="MyVertex.h" />
+    <ClInclude Include="ParticleCollisionCandidateSsbo.h" />
     <ClInclude Include="ParticleQuadTree.h" />
     <ClInclude Include="ParticleQuadTreeNode.h" />
     <ClInclude Include="PolygonSsbo.h" />
@@ -201,6 +204,7 @@
     <None Include="GenerateQuadTreeGeometry.comp" />
     <None Include="Geometry.frag" />
     <None Include="Geometry.vert" />
+    <None Include="ParticleCollision2.comp" />
     <None Include="ParticleCollisions.comp" />
     <None Include="ParticleRender.frag" />
     <None Include="ParticleRender.vert" />

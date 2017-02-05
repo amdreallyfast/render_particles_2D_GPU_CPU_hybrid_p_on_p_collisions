@@ -14,7 +14,7 @@ class PolygonSsbo : public SsboBase
 {
 public:
     PolygonSsbo(const std::vector<PolygonFace> &faceCollection);
-    virtual ~PolygonSsbo();
+    virtual ~PolygonSsbo() override = default; // empty override of base destructor
 
     void ConfigureCompute(unsigned int computeProgramId, const std::string &bufferNameInShader) override;
     void ConfigureRender(unsigned int renderProgramId, unsigned int drawStyle) override;

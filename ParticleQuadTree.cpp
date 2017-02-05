@@ -99,6 +99,92 @@ ParticleQuadTree::ParticleQuadTree(const glm::vec4 &particleRegionCenter, float 
     _numActiveNodes = FIRST_FOUR_NODE_INDEXES::NUM_STARTING_NODES;
 }
 
+#include "glm/geometric.hpp"
+
+// TODO: header
+void ParticleQuadTree::AddPotentiallyCollidableParticle(unsigned int p1Index, unsigned int p2Index)
+{
+    bool p2IndexIsNegative = (p2Index == -1);
+    bool p2IndexOutOfBounds = (p2Index >= Particle::MAX_PARTICLES);
+    bool particlesAreSame = (p1Index == p2Index);
+    if (p2IndexIsNegative || p2IndexOutOfBounds || particlesAreSame)
+    {
+        return;
+    }
+
+    // check if the particles are within collision distance
+    Particle &p1 = _localParticleArray[p1Index];
+    Particle &p2 = _localParticleArray[p2Index];
+    glm::vec4 p1ToP2 = p2._position - p1._position;
+    float distanceBetweenSqr = glm::dot(p1ToP2, p1ToP2);
+
+    float r1 = p1._radiusOfInfluence;
+    float r2 = p2._radiusOfInfluence;
+    float minDistanceForCollisionSqr = (r1 + r2) * (r1 + r2);
+
+    if (distanceBetweenSqr > minDistanceForCollisionSqr)
+    {
+        return;
+    }
+
+    // both indices are valid and they are within striking distance of each other
+    ParticleCollisionCandidates &candidateBlock = _collisionCandidatesPerParticle[p1Index];
+    candidateBlock._candidateIndexes[candidateBlock._numCandidates] = p2Index;
+    candidateBlock._numCandidates++;
+}
+
+// TODO: header
+void ParticleQuadTree::AddCollidableParticlesFromNode(unsigned int particleIndex, unsigned int nodeIndex)
+{
+    // Note: If the maximum number of particles in each node changes, then this function MUST 
+    // change or risk a memory access error.    
+    if (nodeIndex == -1 || nodeIndex >= MAX_NODES)
+    {
+        return;
+    }
+
+    ParticleQuadTreeNode &node = _allNodes[nodeIndex];
+    for (int particleCount = 0; particleCount < node._numCurrentParticles; particleCount++)
+    {
+        int otherParticleIndex = node._indicesForContainedParticles[particleCount];
+        AddPotentiallyCollidableParticle(particleIndex, otherParticleIndex);
+    }
+}
+
+
+// TODO: header
+void ParticleQuadTree::GenerateCollisionCandidates(Particle *particleCollection, int numParticles)
+{
+    ResetTree();
+    AddParticlestoTree(particleCollection, numParticles);
+
+    for (int particleIndex = 0; particleIndex < numParticles; particleIndex++)
+    {
+        Particle &p1 = _localParticleArray[particleIndex];
+        if (p1._isActive == 0)
+        {
+            continue;
+        }
+
+        int nodeIndex = p1._indexOfNodeThatItIsOccupying;
+
+        // determine which, if any, of the particles from the "home" node are within collision range
+        AddCollidableParticlesFromNode(particleIndex, nodeIndex);
+
+        // repeat for all neighboring particles
+        const ParticleQuadTreeNode &node = _allNodes[nodeIndex];
+        AddCollidableParticlesFromNode(particleIndex, node._neighborIndexLeft);
+        AddCollidableParticlesFromNode(particleIndex, node._neighborIndexTopLeft);
+        AddCollidableParticlesFromNode(particleIndex, node._neighborIndexTop);
+        AddCollidableParticlesFromNode(particleIndex, node._neighborIndexTopRight);
+        AddCollidableParticlesFromNode(particleIndex, node._neighborIndexRight);
+        AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottomRight);
+        AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottom);
+        AddCollidableParticlesFromNode(particleIndex, node._neighborIndexBottomLeft);
+
+    }
+}
+
 /*-----------------------------------------------------------------------------------------------
 Description:
     Runs through the node array and resets every single node except those in the initial 

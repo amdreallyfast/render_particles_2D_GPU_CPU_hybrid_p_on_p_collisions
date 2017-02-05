@@ -411,6 +411,7 @@ void UpdateAllTheThings()
 
     
     gpQuadTree->AddParticlestoTree(particleObjPtr, Particle::MAX_PARTICLES);
+    //gpQuadTree->GenerateCollisionCandidates(particleObjPtr, Particle::MAX_PARTICLES);
 
 
 

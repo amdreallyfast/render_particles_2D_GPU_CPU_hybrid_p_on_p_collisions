@@ -54,7 +54,10 @@
       <Filter>ComputeControllers</Filter>
     </ClCompile>
     <ClCompile Include="ParticleQuadTree.cpp">
-      <Filter>QuadTree</Filter>
+      <Filter>CollisionDetection</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleCollisionCandidateSsbo.cpp">
+      <Filter>Buffers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -118,10 +121,16 @@
       <Filter>ComputeControllers</Filter>
     </ClInclude>
     <ClInclude Include="ParticleQuadTree.h">
-      <Filter>QuadTree</Filter>
+      <Filter>CollisionDetection</Filter>
     </ClInclude>
     <ClInclude Include="ParticleQuadTreeNode.h">
-      <Filter>QuadTree</Filter>
+      <Filter>CollisionDetection</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleCollisionCandidateSsbo.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleCollisionCandidates.h">
+      <Filter>CollisionDetection</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -140,7 +149,7 @@
     <Filter Include="ComputeControllers">
       <UniqueIdentifier>{e20e28db-53e8-45ba-bfd1-761ca3e677cd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="QuadTree">
+    <Filter Include="CollisionDetection">
       <UniqueIdentifier>{da067516-a922-4bd9-bed3-a1eec44ef790}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -179,6 +188,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="ParticleRender.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="ParticleCollision2.comp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

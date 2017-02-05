@@ -1,6 +1,6 @@
 #include "QuadTreeNodeSsbo.h"
-#include "ParticleQuadTreeNode.h"
 
+#include "ParticleQuadTreeNode.h"
 #include "glload/include/glload/gl_4_4.h"
 
 
@@ -29,18 +29,6 @@ QuadTreeNodeSsbo::QuadTreeNodeSsbo(const ParticleQuadTreeNode *nodeCollection, i
     // cleanup
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
-}
-
-/*-----------------------------------------------------------------------------------------------
-Description:
-    Does nothing.  Exists to be declared virtual so that the base class' destructor is called
-upon object death.
-Parameters: None
-Returns:    None
-Creator: John Cox, 1-16-2017
------------------------------------------------------------------------------------------------*/
-QuadTreeNodeSsbo::~QuadTreeNodeSsbo()
-{
 }
 
 /*-----------------------------------------------------------------------------------------------

@@ -403,10 +403,10 @@ void main()
     }
 
 
-    uint leafNodeIndex = FindLeafNode(particleIndex);
-
-    PopulateCollidableParticlesArray(particleIndex, leafNodeIndex);
-    ParticleCollisions(particleIndex);
+//    uint leafNodeIndex = FindLeafNode(particleIndex);
+//
+//    PopulateCollidableParticlesArray(particleIndex, leafNodeIndex);
+//    ParticleCollisions(particleIndex);
 
 }
 
