@@ -361,35 +361,59 @@ void UpdateAllTheThings()
 
     
 
-    GLuint copyBufferId1;
-    glGenBuffers(1, &copyBufferId1);
-    glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferId1);
+    //GLuint copyBufferId1;
+    //glGenBuffers(1, &copyBufferId1);
+    //glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferId1);
 
-
-    // particles
-    glBufferData(GL_COPY_WRITE_BUFFER, gpParticleBuffer->BufferSizeBytes(), 0, GL_DYNAMIC_COPY);
-    glBindBuffer(GL_COPY_READ_BUFFER, gpParticleBuffer->BufferId());
-    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, gpParticleBuffer->BufferSizeBytes());
-    void *bufferPtr = glMapBuffer(GL_COPY_WRITE_BUFFER, GL_READ_ONLY);
-    Particle *particleObjPtr = static_cast<Particle *>(bufferPtr);
-    //int activeCounter = 0;
-    //int inactiveCounter = 0;
-    //for (size_t i = 0; i < Particle::MAX_PARTICLES; i++)
+    //unsigned int bufferSizeBytes = gpParticleBuffer->BufferSizeBytes();
+    //if (gpQuadTreeBuffer->BufferSizeBytes() > bufferSizeBytes)
     //{
-    //    if (particleObjPtr[i]._isActive == 0)
-    //    {
-    //        inactiveCounter++;
-    //    }
-    //    else
-    //    {
-    //        activeCounter++;
-    //    }
+    //    bufferSizeBytes = gpQuadTreeBuffer->BufferSizeBytes();
     //}
-    //printf("Update() loop: active: %5d, inactive: %5d\n", activeCounter, inactiveCounter);
+    //glBufferData(GL_COPY_WRITE_BUFFER, bufferSizeBytes, 0, GL_DYNAMIC_COPY);
+
+    //// particles
+    //glBindBuffer(GL_COPY_READ_BUFFER, gpParticleBuffer->BufferId());
+    //glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, gpParticleBuffer->BufferSizeBytes());
+    //void *bufferPtr = glMapBuffer(GL_COPY_WRITE_BUFFER, GL_READ_ONLY);
+    //Particle *particleObjPtr = static_cast<Particle *>(bufferPtr);
+    ////int activeCounter = 0;
+    ////int inactiveCounter = 0;
+    ////for (size_t i = 0; i < Particle::MAX_PARTICLES; i++)
+    ////{
+    ////    if (particleObjPtr[i]._isActive == 0)
+    ////    {
+    ////        inactiveCounter++;
+    ////    }
+    ////    else
+    ////    {
+    ////        activeCounter++;
+    ////    }
+    ////}
+    ////printf("Update() loop: active: %5d, inactive: %5d\n", activeCounter, inactiveCounter);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gpParticleBuffer->BufferId());
+    void *bufferPtr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_ONLY);
+    Particle *particleObjPtr = static_cast<Particle *>(bufferPtr);
+    gpQuadTree->AddParticlestoTree(particleObjPtr, Particle::MAX_PARTICLES);
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gpQuadTreeBuffer->BufferId());
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, gpQuadTreeBuffer->BufferSizeBytes(), gpQuadTree->QuadTreeBuffer());
+    
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    //glBindBuffer(GL_COPY_READ_BUFFER, gpQuadTreeBuffer->BufferId());
+    //glBufferSubData(GL_COPY_READ_BUFFER, 0, gpQuadTreeBuffer->BufferSizeBytes(), gpQuadTree->QuadTreeBuffer());
+
+    //glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, gpQuadTreeBuffer->BufferSizeBytes());
+
+
+
+
 
 
     // nodes
-    //glBufferData(GL_COPY_WRITE_BUFFER, gpQuadTreeBuffer->BufferSizeBytes(), 0, GL_DYNAMIC_COPY);
     //glBindBuffer(GL_COPY_READ_BUFFER, gpQuadTreeBuffer->BufferId());
     //glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, gpQuadTreeBuffer->BufferSizeBytes());
     //void *bufferPtr = glMapBuffer(GL_COPY_WRITE_BUFFER, GL_READ_ONLY);
@@ -404,21 +428,21 @@ void UpdateAllTheThings()
     //    }
     //}
 
-    glUnmapBuffer(GL_COPY_WRITE_BUFFER);
-    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
-    glBindBuffer(GL_COPY_READ_BUFFER, 0);
-    glDeleteBuffers(1, &copyBufferId1);
+    //glUnmapBuffer(GL_COPY_WRITE_BUFFER);
+    //glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+    //glBindBuffer(GL_COPY_READ_BUFFER, 0);
+    //glDeleteBuffers(1, &copyBufferId1);
 
     
-    gpQuadTree->AddParticlestoTree(particleObjPtr, Particle::MAX_PARTICLES);
+    //gpQuadTree->AddParticlestoTree(particleObjPtr, Particle::MAX_PARTICLES);
 
 
 
 
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gpQuadTreeBuffer->BufferId());
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, gpQuadTreeBuffer->BufferSizeBytes(), gpQuadTree->QuadTreeBuffer());
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, gpQuadTreeBuffer->BufferId());
+    //glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, gpQuadTreeBuffer->BufferSizeBytes(), gpQuadTree->QuadTreeBuffer());
+    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     //glBindBuffer(GL_SHADER_STORAGE_BUFFER, gpParticleBuffer->BufferId());
     //glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, gpParticleBuffer->BufferSizeBytes(), gpQuadTree->ParticleBuffer());
@@ -431,7 +455,7 @@ void UpdateAllTheThings()
 
 
     gpQuadTreeParticleCollider->Update(deltaTimeSec);
-    gpQuadTreeGeometryGenerator->GenerateGeometry();
+    //gpQuadTreeGeometryGenerator->GenerateGeometry();
 
 
 
